@@ -46,3 +46,8 @@ app.*.map.json
 
 # Widget Preview related
 .widget_preview/
+
+# Scripts y registros de apoyo
+/punto*.bat
+/subir_git.bat
+/*_log.txt
