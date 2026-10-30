@@ -113,6 +113,23 @@ class ConfiguracionEscala {
   /// Texto de una nota de la escala (en centésimas) con sus decimales.
   String formatear(int centesimas) => formatearCentesimas(centesimas, decimales);
 
+  /// Mensaje de error si la nota (en centésimas) no es válida en esta escala.
+  String? errorNota(int centesimas) {
+    if (centesimas < notaMinima || centesimas > notaMaxima) {
+      return 'La nota debe estar entre ${formatear(notaMinima)} '
+          'y ${formatear(notaMaxima)}.';
+    }
+    if (centesimas % centesimasPorUnidad != 0) {
+      return decimales == 0
+          ? 'La nota no puede tener decimales.'
+          : 'La nota puede tener máximo $decimales '
+              '${decimales == 1 ? 'decimal' : 'decimales'}.';
+    }
+    return null;
+  }
+
+  bool aprueba(int centesimas) => centesimas >= notaAprobatoria;
+
   @override
   bool operator ==(Object other) =>
       other is ConfiguracionEscala &&

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../dominio/formato_fecha.dart';
 import '../dominio/perfil.dart';
 import '../estado/providers.dart';
 import 'configuracion_page.dart';
@@ -27,6 +28,13 @@ class HoyPage extends ConsumerWidget {
     };
     final nombre = config?.perfil.nombre ?? '';
     final saludo = nombre.isEmpty ? 'Hola' : 'Hola, $nombre';
+    final activo = switch (ref.watch(semestresProvider)) {
+      AsyncData(:final value) => value.where((s) => s.activo).firstOrNull,
+      _ => null,
+    };
+    final hoy = formatearFechaLarga(DateTime.now());
+    final subtitulo =
+        activo == null ? 'Sin semestre activo · $hoy' : 'Periodo ${activo.nombre} · $hoy';
 
     return ListView(
       padding: const EdgeInsets.all(16),
@@ -38,10 +46,7 @@ class HoyPage extends ConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(saludo, style: tema.textTheme.headlineSmall),
-                  Text(
-                    'Periodo 2026-2 · lunes 26 de octubre',
-                    style: tema.textTheme.bodyMedium,
-                  ),
+                  Text(subtitulo, style: tema.textTheme.bodyMedium),
                 ],
               ),
             ),

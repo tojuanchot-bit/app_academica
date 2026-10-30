@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'pantallas/inicio_page.dart';
@@ -14,6 +15,10 @@ class AppAcademica extends StatelessWidget {
     return MaterialApp(
       title: 'App académica',
       debugShowCheckedModeBanner: false,
+      // Calendario, botones de diálogos y textos del sistema en español.
+      locale: const Locale('es'),
+      supportedLocales: const [Locale('es'), Locale('en')],
+      localizationsDelegates: GlobalMaterialLocalizations.delegates,
       theme: ThemeData(
         useMaterial3: true,
         colorScheme: ColorScheme.fromSeed(seedColor: semilla),

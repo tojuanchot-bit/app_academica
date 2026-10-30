@@ -128,7 +128,7 @@ class _ConfiguracionPageState extends ConsumerState<ConfiguracionPage> {
           Padding(
             padding: const EdgeInsets.only(right: 8),
             child: FilledButton(
-              onPressed: puedeGuardar && escalaLista != null
+              onPressed: puedeGuardar
                   ? () => _guardar(perfil, escalaLista)
                   : null,
               child: const Text('Guardar'),

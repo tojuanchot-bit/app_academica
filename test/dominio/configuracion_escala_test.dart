@@ -50,6 +50,23 @@ void main() {
     });
   });
 
+  group('errorNota y aprueba', () {
+    test('notas válidas en la escala ITM', () {
+      expect(itm.errorNota(0), isNull);
+      expect(itm.errorNota(350), isNull);
+      expect(itm.errorNota(500), isNull);
+    });
+    test('fuera de rango o con más decimales', () {
+      expect(itm.errorNota(510), contains('entre 0.0 y 5.0'));
+      expect(itm.errorNota(305), contains('1 decimal'));
+      expect(ConfiguracionEscala.cien.errorNota(6050), contains('decimales'));
+    });
+    test('aprueba desde la nota aprobatoria', () {
+      expect(itm.aprueba(300), isTrue);
+      expect(itm.aprueba(290), isFalse);
+    });
+  });
+
   group('ejemplosRedondeo (vista previa)', () {
     test('ITM: 2.95 → 3.0 aprueba y 3.05 → 3.1', () {
       final ej = ejemplosRedondeo(itm);

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'hoy_page.dart';
+import 'materias_page.dart';
 
 /// Barra de navegación con los 4 destinos (D-011).
 class Inicio extends StatefulWidget {
@@ -15,7 +16,7 @@ class _InicioState extends State<Inicio> {
 
   static const _paginas = <Widget>[
     HoyPage(),
-    Center(child: Text('Materias')),
+    MateriasPage(),
     Center(child: Text('Horario')),
     Center(child: Text('Agenda')),
   ];
