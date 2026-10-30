@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../dominio/configuracion_escala.dart';
 import '../dominio/materia.dart';
 import '../estado/providers.dart';
+import 'resultado_materia.dart';
 
 /// Colores de materia del tema (D-012).
 class ColorMateria {
@@ -148,10 +149,12 @@ class MateriaTile extends ConsumerWidget {
       if (materia.docente.isNotEmpty) materia.docente,
       '${materia.creditos} ${materia.creditos == 1 ? 'crédito' : 'créditos'}',
     ].join(' · ');
-    final nota = materia.notaFinal;
+    final enCurso = materia.estado == EstadoMateria.enCurso;
+    final calculada = enCurso ? definitivaDe(ref, materia) : null;
+    final nota = enCurso ? calculada : materia.notaFinal;
 
     final Widget derecha;
-    if (materia.estado.estaCerrada && nota != null) {
+    if ((materia.estado.estaCerrada || enCurso) && nota != null) {
       derecha = Column(
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.end,
@@ -161,7 +164,7 @@ class MateriaTile extends ConsumerWidget {
             style: Theme.of(context).textTheme.titleMedium,
           ),
           Text(
-            materia.estado.etiqueta,
+            enCurso ? 'definitiva' : materia.estado.etiqueta,
             style: Theme.of(context).textTheme.labelSmall,
           ),
         ],

@@ -1,13 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../dominio/calculo_notas.dart';
 import '../dominio/formato_fecha.dart';
+import '../dominio/materia.dart';
 import '../dominio/perfil.dart';
 import '../estado/providers.dart';
 import 'configuracion_page.dart';
+import 'materia_detalle_page.dart';
+import 'resultado_materia.dart';
+import 'widgets_materia.dart';
 
-/// Pantalla Hoy. El saludo sale del perfil guardado; el resto sigue con
-/// datos fijos hasta los siguientes módulos.
+/// Pantalla Hoy. Saludo, promedio acumulado y alertas son reales; avance de
+/// carrera, clases y pendientes siguen con datos fijos hasta sus fases.
 class HoyPage extends ConsumerWidget {
   const HoyPage({super.key});
 
@@ -73,11 +78,11 @@ class HoyPage extends ConsumerWidget {
           ),
         ],
         const SizedBox(height: 16),
+        const _TarjetaPromedio(),
+        const SizedBox(height: 12),
         const _TarjetaAvance(aprobados: 32, total: 92, nivel: 3),
         const SizedBox(height: 12),
-        const _AlertaRiesgo(
-          texto: 'Física Mecánica: necesitas 3.4 en lo que falta para aprobar.',
-        ),
+        if (activo?.id case final idActivo?) _Alertas(semestreId: idActivo),
         const SizedBox(height: 20),
         Text('Clases de hoy', style: tema.textTheme.titleMedium),
         const SizedBox(height: 8),
@@ -153,28 +158,62 @@ class _TarjetaAvance extends StatelessWidget {
   }
 }
 
-class _AlertaRiesgo extends StatelessWidget {
-  const _AlertaRiesgo({required this.texto});
-
-  final String texto;
+/// Promedio acumulado de todos los semestres (D-014).
+class _TarjetaPromedio extends ConsumerWidget {
+  const _TarjetaPromedio();
 
   @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: const Color(0xFFFFF0CC),
-        borderRadius: BorderRadius.circular(12),
+  Widget build(BuildContext context, WidgetRef ref) {
+    final tema = Theme.of(context);
+    final escala = escalaActual(ref);
+    final materias = switch (ref.watch(todasLasMateriasProvider)) {
+      AsyncData(:final value) => value,
+      _ => const <Materia>[],
+    };
+    final promedio = promedioPonderado(materias, escala);
+    return Card(
+      child: ListTile(
+        leading: const Icon(Icons.insights_outlined),
+        title: const Text('Promedio acumulado'),
+        subtitle: Text(promedio == null
+            ? 'Aparece cuando cierres tu primera materia'
+            : 'Sobre las materias aprobadas y reprobadas'),
+        trailing: promedio == null
+            ? null
+            : Text(escala.formatear(promedio),
+                style: tema.textTheme.headlineSmall),
       ),
-      child: Row(
-        children: [
-          const Icon(Icons.warning_amber_rounded, color: Color(0xFF8A5A00)),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(texto, style: const TextStyle(color: Color(0xFF8A5A00))),
-          ),
-        ],
-      ),
+    );
+  }
+}
+
+/// Alertas de las materias en curso del semestre activo que están en
+/// riesgo o ya no alcanzan para aprobar.
+class _Alertas extends ConsumerWidget {
+  const _Alertas({required this.semestreId});
+
+  final int semestreId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final materias = switch (ref.watch(materiasProvider(semestreId))) {
+      AsyncData(:final value) => value,
+      _ => const <Materia>[],
+    };
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        for (final m in materias)
+          if (m.estado == EstadoMateria.enCurso)
+            AlertaMateria(
+              materia: m,
+              onTap: () => Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (_) => MateriaDetallePage(materiaId: m.id!),
+                ),
+              ),
+            ),
+      ],
     );
   }
 }

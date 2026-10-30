@@ -46,6 +46,18 @@ class Evaluacion {
   final int? notaSupuesta;
 
   bool get esHija => padreId != null;
+
+  /// Copia con otra nota (la proyección prueba notas en las pendientes).
+  Evaluacion conNota(int nueva) => Evaluacion(
+        id: id,
+        materiaId: materiaId,
+        padreId: padreId,
+        nombre: nombre,
+        porcentaje: porcentaje,
+        nota: nueva,
+        fecha: fecha,
+        notaSupuesta: notaSupuesta,
+      );
 }
 
 /// Errores de nombre y porcentaje. [hermanas] son las evaluaciones con el

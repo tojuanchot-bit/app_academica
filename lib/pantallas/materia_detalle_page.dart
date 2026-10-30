@@ -8,6 +8,7 @@ import '../dominio/redondeo.dart';
 import '../estado/providers.dart';
 import 'evaluaciones_seccion.dart';
 import 'materia_form_page.dart';
+import 'resultado_materia.dart';
 import 'widgets_materia.dart';
 
 /// Detalle de una materia con sus acciones según el estado.
@@ -179,6 +180,10 @@ class _Detalle extends ConsumerWidget {
             ),
             const SizedBox(height: 16),
             EvaluacionesSeccion(materia: materia),
+            if (materia.estado == EstadoMateria.enCurso) ...[
+              const SizedBox(height: 24),
+              ResultadoMateria(materia: materia),
+            ],
             const SizedBox(height: 24),
             ..._acciones(context, ref, escala),
           ],
@@ -196,16 +201,10 @@ class _Detalle extends ConsumerWidget {
     switch (materia.estado) {
       case EstadoMateria.enCurso:
         return [
-          Text(
-            'La definitiva calculada con las evaluaciones llega en el '
-            'siguiente módulo. Por ahora puedes registrar la nota final a mano.',
-            style: tema.textTheme.bodySmall,
-          ),
-          const SizedBox(height: 12),
-          FilledButton.icon(
+          OutlinedButton.icon(
             onPressed: () => _cerrar(context, ref, escala),
             icon: const Icon(Icons.grade_outlined),
-            label: const Text('Registrar nota final'),
+            label: const Text('Registrar nota final a mano'),
           ),
           const SizedBox(height: 8),
           OutlinedButton.icon(

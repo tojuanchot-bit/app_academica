@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../dominio/calculo_notas.dart';
 import '../dominio/formato_fecha.dart';
 import '../dominio/materia.dart';
 import '../dominio/semestre.dart';
@@ -205,7 +206,15 @@ class _MateriasPageState extends ConsumerState<MateriasPage> {
           ],
         );
 
+    final escala = escalaActual(ref);
+    final promedio = promedioPonderado(materias, escala);
+
     return [
+      if (promedio != null)
+        Text(
+          'Promedio del semestre: ${escala.formatear(promedio)}',
+          style: tema.textTheme.titleMedium,
+        ),
       Text(
         'Créditos: ${partesResumen.join(' · ')}',
         style: tema.textTheme.bodyMedium,

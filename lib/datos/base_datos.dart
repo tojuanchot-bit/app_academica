@@ -225,6 +225,13 @@ class BaseDatos extends _$BaseDatos {
     return consulta.watch().map((filas) => filas.map(_aMateria).toList());
   }
 
+  /// Las materias de todos los semestres (para el promedio acumulado).
+  Stream<List<Materia>> observarTodasLasMaterias() {
+    return select(materias)
+        .watch()
+        .map((filas) => filas.map(_aMateria).toList());
+  }
+
   Stream<Materia?> observarMateria(int id) {
     final consulta = select(materias)..where((t) => t.id.equals(id));
     return consulta

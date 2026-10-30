@@ -1,5 +1,6 @@
 import 'configuracion_escala.dart';
 import 'evaluacion.dart';
+import 'materia.dart';
 import 'redondeo.dart';
 
 /// Valor exacto de una nota en centésimas: numerador / denominador.
@@ -20,6 +21,21 @@ class Fraccion {
 
   @override
   String toString() => '$numerador/$denominador';
+
+  Fraccion operator +(Fraccion otra) => Fraccion._reducida(
+        numerador * otra.denominador + otra.numerador * denominador,
+        denominador * otra.denominador,
+      );
+
+  Fraccion por(int k) => Fraccion._reducida(numerador * k, denominador);
+
+  Fraccion entre(int k) => Fraccion._reducida(numerador, denominador * k);
+
+  /// Simplifica para que los números no crezcan al sumar muchos términos.
+  static Fraccion _reducida(int n, int d) {
+    final g = n.gcd(d);
+    return Fraccion(n ~/ g, d ~/ g);
+  }
 }
 
 /// Redondea (o trunca) un valor exacto a los decimales de la escala.
@@ -70,4 +86,172 @@ Fraccion? notaCompuesta(List<Evaluacion> hijas, ConfiguracionEscala escala) {
 
   if (!escala.redondearIntermedias) return exacta;
   return Fraccion(redondearAEscala(exacta, escala), 1);
+}
+
+// ------------------------------------------------- Definitiva (D-008)
+
+/// Valor de una evaluación de primer nivel. Las pendientes toman
+/// [notaPendientes] (si es null, quedan sin valor y se devuelve null).
+Fraccion? _valorEvaluacion(
+  Evaluacion e,
+  List<Evaluacion> todas,
+  ConfiguracionEscala escala,
+  int? notaPendientes,
+) {
+  final id = e.id;
+  final hijas = id == null ? const <Evaluacion>[] : hijasDe(todas, id);
+  if (hijas.isEmpty) {
+    final n = e.nota ?? notaPendientes;
+    return n == null ? null : Fraccion(n, 1);
+  }
+  final completas = [
+    for (final h in hijas)
+      (h.nota == null && notaPendientes != null) ? h.conNota(notaPendientes) : h,
+  ];
+  return notaCompuesta(completas, escala);
+}
+
+/// $\sum_i n_i p_i$ en centésimas, sin redondear.
+Fraccion? _sumaPonderada(
+  List<Evaluacion> todas,
+  ConfiguracionEscala escala, {
+  int? notaPendientes,
+  required bool exigirCompleto,
+}) {
+  final raiz = primerNivel(todas);
+  if (raiz.isEmpty) return null;
+  if (exigirCompleto && sumaPorcentajes(raiz) != porcentajeCompleto) {
+    return null;
+  }
+  var total = const Fraccion(0, 1);
+  for (final e in raiz) {
+    final valor = _valorEvaluacion(e, todas, escala, notaPendientes);
+    if (valor == null) return null;
+    total = total + valor.por(e.porcentaje ?? 0);
+  }
+  return total.entre(porcentajeCompleto);
+}
+
+/// Definitiva $D = R(\sum_i n_i p_i)$ en centésimas. null si los porcentajes
+/// no suman 100 % o hay evaluaciones sin nota (y no se da [notaPendientes]).
+int? definitiva(
+  List<Evaluacion> todas,
+  ConfiguracionEscala escala, {
+  int? notaPendientes,
+}) {
+  final suma = _sumaPonderada(todas, escala,
+      notaPendientes: notaPendientes, exigirCompleto: true);
+  return suma == null ? null : redondearAEscala(suma, escala);
+}
+
+/// Lo que llevas con lo presentado: las pendientes cuentan como 0.
+int? acumuladoPresentado(List<Evaluacion> todas, ConfiguracionEscala escala) {
+  final suma =
+      _sumaPonderada(todas, escala, notaPendientes: 0, exigirCompleto: false);
+  return suma == null ? null : redondearAEscala(suma, escala);
+}
+
+/// Evaluaciones sin nota que no son compuestas (las que faltan por presentar).
+int contarPendientes(List<Evaluacion> todas) {
+  var pendientes = 0;
+  for (final e in todas) {
+    final id = e.id;
+    final esCompuesta = id != null && todas.any((h) => h.padreId == id);
+    if (!esCompuesta && e.nota == null) pendientes++;
+  }
+  return pendientes;
+}
+
+// ------------------------------------------------- Proyección (D-009)
+
+enum TipoProyeccion {
+  /// Los porcentajes de primer nivel no suman 100 %.
+  porcentajesIncompletos,
+
+  /// No queda nada pendiente: [Proyeccion.nota] es la definitiva.
+  completa,
+
+  /// Con la nota mínima en lo que falta ya se alcanza la meta.
+  asegurada,
+
+  /// [Proyeccion.nota] es lo mínimo que necesitas en cada pendiente.
+  necesita,
+
+  /// Ni con la máxima se alcanza; [Proyeccion.definitivaMaxima] es el tope.
+  noAlcanza,
+}
+
+class Proyeccion {
+  const Proyeccion(this.tipo, {this.nota, this.definitivaMaxima});
+
+  final TipoProyeccion tipo;
+  final int? nota;
+  final int? definitivaMaxima;
+}
+
+/// Prueba cada nota posible (mín, mín + paso, …, máx) en todas las
+/// pendientes y devuelve la menor con la que la definitiva llega a [meta].
+/// Es exacto aunque haya redondeos intermedios, porque usa la misma
+/// función [definitiva] en cada intento.
+Proyeccion proyectar(
+  List<Evaluacion> todas,
+  ConfiguracionEscala escala, {
+  required int meta,
+}) {
+  final raiz = primerNivel(todas);
+  if (raiz.isEmpty || sumaPorcentajes(raiz) != porcentajeCompleto) {
+    return const Proyeccion(TipoProyeccion.porcentajesIncompletos);
+  }
+  if (contarPendientes(todas) == 0) {
+    return Proyeccion(TipoProyeccion.completa,
+        nota: definitiva(todas, escala));
+  }
+  final paso = escala.centesimasPorUnidad;
+  for (var x = escala.notaMinima; x <= escala.notaMaxima; x += paso) {
+    final d = definitiva(todas, escala, notaPendientes: x);
+    if (d != null && d >= meta) {
+      return Proyeccion(
+        x == escala.notaMinima
+            ? TipoProyeccion.asegurada
+            : TipoProyeccion.necesita,
+        nota: x,
+      );
+    }
+  }
+  return Proyeccion(
+    TipoProyeccion.noAlcanza,
+    definitivaMaxima:
+        definitiva(todas, escala, notaPendientes: escala.notaMaxima),
+  );
+}
+
+/// Metas para elegir: la aprobatoria y tres más hacia la máxima.
+/// ITM: 3.0, 3.5, 4.0, 4.5.
+List<int> metasSugeridas(ConfiguracionEscala escala) {
+  final a = escala.notaAprobatoria;
+  final rango = escala.notaMaxima - a;
+  final paso = escala.centesimasPorUnidad;
+  final metas = <int>[];
+  for (var k = 0; k < 4; k++) {
+    final v = a + (rango * k ~/ 4) ~/ paso * paso;
+    if (!metas.contains(v)) metas.add(v);
+  }
+  return metas;
+}
+
+// ------------------------------------------------- Promedios
+
+/// Promedio ponderado por créditos $R(\sum D_j c_j / \sum c_j)$ de las
+/// materias aprobadas y reprobadas (D-014). null si no hay ninguna.
+int? promedioPonderado(Iterable<Materia> materias, ConfiguracionEscala escala) {
+  var sumaNotas = 0;
+  var sumaCreditos = 0;
+  for (final m in materias) {
+    final nota = m.notaFinal;
+    if (!m.estado.estaCerrada || nota == null) continue;
+    sumaNotas += nota * m.creditos;
+    sumaCreditos += m.creditos;
+  }
+  if (sumaCreditos == 0) return null;
+  return redondearAEscala(Fraccion(sumaNotas, sumaCreditos), escala);
 }

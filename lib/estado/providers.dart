@@ -40,3 +40,8 @@ final evaluacionesProvider =
     StreamProvider.family<List<Evaluacion>, int>((ref, materiaId) {
   return ref.watch(baseDatosProvider).observarEvaluaciones(materiaId);
 });
+
+/// Materias de todos los semestres (para el promedio acumulado).
+final todasLasMateriasProvider = StreamProvider<List<Materia>>((ref) {
+  return ref.watch(baseDatosProvider).observarTodasLasMaterias();
+});
