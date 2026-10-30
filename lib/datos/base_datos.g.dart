@@ -1552,12 +1552,528 @@ class MateriasCompanion extends UpdateCompanion<MateriaFila> {
   }
 }
 
+class $EvaluacionesTable extends Evaluaciones
+    with TableInfo<$EvaluacionesTable, EvaluacionFila> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $EvaluacionesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _materiaIdMeta = const VerificationMeta(
+    'materiaId',
+  );
+  @override
+  late final GeneratedColumn<int> materiaId = GeneratedColumn<int>(
+    'materia_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES materias (id) ON DELETE CASCADE',
+    ),
+  );
+  static const VerificationMeta _padreIdMeta = const VerificationMeta(
+    'padreId',
+  );
+  @override
+  late final GeneratedColumn<int> padreId = GeneratedColumn<int>(
+    'padre_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _nombreMeta = const VerificationMeta('nombre');
+  @override
+  late final GeneratedColumn<String> nombre = GeneratedColumn<String>(
+    'nombre',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _porcentajeMeta = const VerificationMeta(
+    'porcentaje',
+  );
+  @override
+  late final GeneratedColumn<int> porcentaje = GeneratedColumn<int>(
+    'porcentaje',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _notaMeta = const VerificationMeta('nota');
+  @override
+  late final GeneratedColumn<int> nota = GeneratedColumn<int>(
+    'nota',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _fechaMeta = const VerificationMeta('fecha');
+  @override
+  late final GeneratedColumn<DateTime> fecha = GeneratedColumn<DateTime>(
+    'fecha',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _notaSupuestaMeta = const VerificationMeta(
+    'notaSupuesta',
+  );
+  @override
+  late final GeneratedColumn<int> notaSupuesta = GeneratedColumn<int>(
+    'nota_supuesta',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    materiaId,
+    padreId,
+    nombre,
+    porcentaje,
+    nota,
+    fecha,
+    notaSupuesta,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'evaluaciones';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<EvaluacionFila> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('materia_id')) {
+      context.handle(
+        _materiaIdMeta,
+        materiaId.isAcceptableOrUnknown(data['materia_id']!, _materiaIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_materiaIdMeta);
+    }
+    if (data.containsKey('padre_id')) {
+      context.handle(
+        _padreIdMeta,
+        padreId.isAcceptableOrUnknown(data['padre_id']!, _padreIdMeta),
+      );
+    }
+    if (data.containsKey('nombre')) {
+      context.handle(
+        _nombreMeta,
+        nombre.isAcceptableOrUnknown(data['nombre']!, _nombreMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_nombreMeta);
+    }
+    if (data.containsKey('porcentaje')) {
+      context.handle(
+        _porcentajeMeta,
+        porcentaje.isAcceptableOrUnknown(data['porcentaje']!, _porcentajeMeta),
+      );
+    }
+    if (data.containsKey('nota')) {
+      context.handle(
+        _notaMeta,
+        nota.isAcceptableOrUnknown(data['nota']!, _notaMeta),
+      );
+    }
+    if (data.containsKey('fecha')) {
+      context.handle(
+        _fechaMeta,
+        fecha.isAcceptableOrUnknown(data['fecha']!, _fechaMeta),
+      );
+    }
+    if (data.containsKey('nota_supuesta')) {
+      context.handle(
+        _notaSupuestaMeta,
+        notaSupuesta.isAcceptableOrUnknown(
+          data['nota_supuesta']!,
+          _notaSupuestaMeta,
+        ),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  EvaluacionFila map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return EvaluacionFila(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      materiaId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}materia_id'],
+      )!,
+      padreId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}padre_id'],
+      ),
+      nombre: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}nombre'],
+      )!,
+      porcentaje: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}porcentaje'],
+      ),
+      nota: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}nota'],
+      ),
+      fecha: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}fecha'],
+      ),
+      notaSupuesta: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}nota_supuesta'],
+      ),
+    );
+  }
+
+  @override
+  $EvaluacionesTable createAlias(String alias) {
+    return $EvaluacionesTable(attachedDatabase, alias);
+  }
+}
+
+class EvaluacionFila extends DataClass implements Insertable<EvaluacionFila> {
+  final int id;
+  final int materiaId;
+
+  /// Evaluación compuesta a la que pertenece; null en el primer nivel.
+  final int? padreId;
+  final String nombre;
+
+  /// En centésimas de % (30 % = 3000).
+  final int? porcentaje;
+
+  /// En centésimas (3.5 = 350).
+  final int? nota;
+  final DateTime? fecha;
+  final int? notaSupuesta;
+  const EvaluacionFila({
+    required this.id,
+    required this.materiaId,
+    this.padreId,
+    required this.nombre,
+    this.porcentaje,
+    this.nota,
+    this.fecha,
+    this.notaSupuesta,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['materia_id'] = Variable<int>(materiaId);
+    if (!nullToAbsent || padreId != null) {
+      map['padre_id'] = Variable<int>(padreId);
+    }
+    map['nombre'] = Variable<String>(nombre);
+    if (!nullToAbsent || porcentaje != null) {
+      map['porcentaje'] = Variable<int>(porcentaje);
+    }
+    if (!nullToAbsent || nota != null) {
+      map['nota'] = Variable<int>(nota);
+    }
+    if (!nullToAbsent || fecha != null) {
+      map['fecha'] = Variable<DateTime>(fecha);
+    }
+    if (!nullToAbsent || notaSupuesta != null) {
+      map['nota_supuesta'] = Variable<int>(notaSupuesta);
+    }
+    return map;
+  }
+
+  EvaluacionesCompanion toCompanion(bool nullToAbsent) {
+    return EvaluacionesCompanion(
+      id: Value(id),
+      materiaId: Value(materiaId),
+      padreId: padreId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(padreId),
+      nombre: Value(nombre),
+      porcentaje: porcentaje == null && nullToAbsent
+          ? const Value.absent()
+          : Value(porcentaje),
+      nota: nota == null && nullToAbsent ? const Value.absent() : Value(nota),
+      fecha: fecha == null && nullToAbsent
+          ? const Value.absent()
+          : Value(fecha),
+      notaSupuesta: notaSupuesta == null && nullToAbsent
+          ? const Value.absent()
+          : Value(notaSupuesta),
+    );
+  }
+
+  factory EvaluacionFila.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return EvaluacionFila(
+      id: serializer.fromJson<int>(json['id']),
+      materiaId: serializer.fromJson<int>(json['materiaId']),
+      padreId: serializer.fromJson<int?>(json['padreId']),
+      nombre: serializer.fromJson<String>(json['nombre']),
+      porcentaje: serializer.fromJson<int?>(json['porcentaje']),
+      nota: serializer.fromJson<int?>(json['nota']),
+      fecha: serializer.fromJson<DateTime?>(json['fecha']),
+      notaSupuesta: serializer.fromJson<int?>(json['notaSupuesta']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'materiaId': serializer.toJson<int>(materiaId),
+      'padreId': serializer.toJson<int?>(padreId),
+      'nombre': serializer.toJson<String>(nombre),
+      'porcentaje': serializer.toJson<int?>(porcentaje),
+      'nota': serializer.toJson<int?>(nota),
+      'fecha': serializer.toJson<DateTime?>(fecha),
+      'notaSupuesta': serializer.toJson<int?>(notaSupuesta),
+    };
+  }
+
+  EvaluacionFila copyWith({
+    int? id,
+    int? materiaId,
+    Value<int?> padreId = const Value.absent(),
+    String? nombre,
+    Value<int?> porcentaje = const Value.absent(),
+    Value<int?> nota = const Value.absent(),
+    Value<DateTime?> fecha = const Value.absent(),
+    Value<int?> notaSupuesta = const Value.absent(),
+  }) => EvaluacionFila(
+    id: id ?? this.id,
+    materiaId: materiaId ?? this.materiaId,
+    padreId: padreId.present ? padreId.value : this.padreId,
+    nombre: nombre ?? this.nombre,
+    porcentaje: porcentaje.present ? porcentaje.value : this.porcentaje,
+    nota: nota.present ? nota.value : this.nota,
+    fecha: fecha.present ? fecha.value : this.fecha,
+    notaSupuesta: notaSupuesta.present ? notaSupuesta.value : this.notaSupuesta,
+  );
+  EvaluacionFila copyWithCompanion(EvaluacionesCompanion data) {
+    return EvaluacionFila(
+      id: data.id.present ? data.id.value : this.id,
+      materiaId: data.materiaId.present ? data.materiaId.value : this.materiaId,
+      padreId: data.padreId.present ? data.padreId.value : this.padreId,
+      nombre: data.nombre.present ? data.nombre.value : this.nombre,
+      porcentaje: data.porcentaje.present
+          ? data.porcentaje.value
+          : this.porcentaje,
+      nota: data.nota.present ? data.nota.value : this.nota,
+      fecha: data.fecha.present ? data.fecha.value : this.fecha,
+      notaSupuesta: data.notaSupuesta.present
+          ? data.notaSupuesta.value
+          : this.notaSupuesta,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('EvaluacionFila(')
+          ..write('id: $id, ')
+          ..write('materiaId: $materiaId, ')
+          ..write('padreId: $padreId, ')
+          ..write('nombre: $nombre, ')
+          ..write('porcentaje: $porcentaje, ')
+          ..write('nota: $nota, ')
+          ..write('fecha: $fecha, ')
+          ..write('notaSupuesta: $notaSupuesta')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    materiaId,
+    padreId,
+    nombre,
+    porcentaje,
+    nota,
+    fecha,
+    notaSupuesta,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is EvaluacionFila &&
+          other.id == this.id &&
+          other.materiaId == this.materiaId &&
+          other.padreId == this.padreId &&
+          other.nombre == this.nombre &&
+          other.porcentaje == this.porcentaje &&
+          other.nota == this.nota &&
+          other.fecha == this.fecha &&
+          other.notaSupuesta == this.notaSupuesta);
+}
+
+class EvaluacionesCompanion extends UpdateCompanion<EvaluacionFila> {
+  final Value<int> id;
+  final Value<int> materiaId;
+  final Value<int?> padreId;
+  final Value<String> nombre;
+  final Value<int?> porcentaje;
+  final Value<int?> nota;
+  final Value<DateTime?> fecha;
+  final Value<int?> notaSupuesta;
+  const EvaluacionesCompanion({
+    this.id = const Value.absent(),
+    this.materiaId = const Value.absent(),
+    this.padreId = const Value.absent(),
+    this.nombre = const Value.absent(),
+    this.porcentaje = const Value.absent(),
+    this.nota = const Value.absent(),
+    this.fecha = const Value.absent(),
+    this.notaSupuesta = const Value.absent(),
+  });
+  EvaluacionesCompanion.insert({
+    this.id = const Value.absent(),
+    required int materiaId,
+    this.padreId = const Value.absent(),
+    required String nombre,
+    this.porcentaje = const Value.absent(),
+    this.nota = const Value.absent(),
+    this.fecha = const Value.absent(),
+    this.notaSupuesta = const Value.absent(),
+  }) : materiaId = Value(materiaId),
+       nombre = Value(nombre);
+  static Insertable<EvaluacionFila> custom({
+    Expression<int>? id,
+    Expression<int>? materiaId,
+    Expression<int>? padreId,
+    Expression<String>? nombre,
+    Expression<int>? porcentaje,
+    Expression<int>? nota,
+    Expression<DateTime>? fecha,
+    Expression<int>? notaSupuesta,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (materiaId != null) 'materia_id': materiaId,
+      if (padreId != null) 'padre_id': padreId,
+      if (nombre != null) 'nombre': nombre,
+      if (porcentaje != null) 'porcentaje': porcentaje,
+      if (nota != null) 'nota': nota,
+      if (fecha != null) 'fecha': fecha,
+      if (notaSupuesta != null) 'nota_supuesta': notaSupuesta,
+    });
+  }
+
+  EvaluacionesCompanion copyWith({
+    Value<int>? id,
+    Value<int>? materiaId,
+    Value<int?>? padreId,
+    Value<String>? nombre,
+    Value<int?>? porcentaje,
+    Value<int?>? nota,
+    Value<DateTime?>? fecha,
+    Value<int?>? notaSupuesta,
+  }) {
+    return EvaluacionesCompanion(
+      id: id ?? this.id,
+      materiaId: materiaId ?? this.materiaId,
+      padreId: padreId ?? this.padreId,
+      nombre: nombre ?? this.nombre,
+      porcentaje: porcentaje ?? this.porcentaje,
+      nota: nota ?? this.nota,
+      fecha: fecha ?? this.fecha,
+      notaSupuesta: notaSupuesta ?? this.notaSupuesta,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (materiaId.present) {
+      map['materia_id'] = Variable<int>(materiaId.value);
+    }
+    if (padreId.present) {
+      map['padre_id'] = Variable<int>(padreId.value);
+    }
+    if (nombre.present) {
+      map['nombre'] = Variable<String>(nombre.value);
+    }
+    if (porcentaje.present) {
+      map['porcentaje'] = Variable<int>(porcentaje.value);
+    }
+    if (nota.present) {
+      map['nota'] = Variable<int>(nota.value);
+    }
+    if (fecha.present) {
+      map['fecha'] = Variable<DateTime>(fecha.value);
+    }
+    if (notaSupuesta.present) {
+      map['nota_supuesta'] = Variable<int>(notaSupuesta.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('EvaluacionesCompanion(')
+          ..write('id: $id, ')
+          ..write('materiaId: $materiaId, ')
+          ..write('padreId: $padreId, ')
+          ..write('nombre: $nombre, ')
+          ..write('porcentaje: $porcentaje, ')
+          ..write('nota: $nota, ')
+          ..write('fecha: $fecha, ')
+          ..write('notaSupuesta: $notaSupuesta')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$BaseDatos extends GeneratedDatabase {
   _$BaseDatos(QueryExecutor e) : super(e);
   $BaseDatosManager get managers => $BaseDatosManager(this);
   late final $PerfilesTable perfiles = $PerfilesTable(this);
   late final $SemestresTable semestres = $SemestresTable(this);
   late final $MateriasTable materias = $MateriasTable(this);
+  late final $EvaluacionesTable evaluaciones = $EvaluacionesTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -1566,6 +2082,7 @@ abstract class _$BaseDatos extends GeneratedDatabase {
     perfiles,
     semestres,
     materias,
+    evaluaciones,
   ];
   @override
   StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules([
@@ -1575,6 +2092,13 @@ abstract class _$BaseDatos extends GeneratedDatabase {
         limitUpdateKind: UpdateKind.delete,
       ),
       result: [TableUpdate('materias', kind: UpdateKind.delete)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'materias',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('evaluaciones', kind: UpdateKind.delete)],
     ),
   ]);
 }
@@ -2222,6 +2746,24 @@ final class $$MateriasTableReferences
       manager.$state.copyWith(prefetchedData: [item]),
     );
   }
+
+  static MultiTypedResultKey<$EvaluacionesTable, List<EvaluacionFila>>
+  _evaluacionesRefsTable(_$BaseDatos db) => MultiTypedResultKey.fromTable(
+    db.evaluaciones,
+    aliasName: 'materias__id__evaluaciones__materia_id',
+  );
+
+  $$EvaluacionesTableProcessedTableManager get evaluacionesRefs {
+    final manager = $$EvaluacionesTableTableManager(
+      $_db,
+      $_db.evaluaciones,
+    ).filter((f) => f.materiaId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_evaluacionesRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
 }
 
 class $$MateriasTableFilterComposer
@@ -2295,6 +2837,31 @@ class $$MateriasTableFilterComposer
           ),
     );
     return composer;
+  }
+
+  Expression<bool> evaluacionesRefs(
+    Expression<bool> Function($$EvaluacionesTableFilterComposer f) f,
+  ) {
+    final $$EvaluacionesTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.evaluaciones,
+      getReferencedColumn: (t) => t.materiaId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$EvaluacionesTableFilterComposer(
+            $db: $db,
+            $table: $db.evaluaciones,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
   }
 }
 
@@ -2428,6 +2995,31 @@ class $$MateriasTableAnnotationComposer
     );
     return composer;
   }
+
+  Expression<T> evaluacionesRefs<T extends Object>(
+    Expression<T> Function($$EvaluacionesTableAnnotationComposer a) f,
+  ) {
+    final $$EvaluacionesTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.evaluaciones,
+      getReferencedColumn: (t) => t.materiaId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$EvaluacionesTableAnnotationComposer(
+            $db: $db,
+            $table: $db.evaluaciones,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
 }
 
 class $$MateriasTableTableManager
@@ -2443,7 +3035,7 @@ class $$MateriasTableTableManager
           $$MateriasTableUpdateCompanionBuilder,
           (MateriaFila, $$MateriasTableReferences),
           MateriaFila,
-          PrefetchHooks Function({bool semestreId})
+          PrefetchHooks Function({bool semestreId, bool evaluacionesRefs})
         > {
   $$MateriasTableTableManager(_$BaseDatos db, $MateriasTable table)
     : super(
@@ -2508,7 +3100,401 @@ class $$MateriasTableTableManager
                 ),
               )
               .toList(),
-          prefetchHooksCallback: ({semestreId = false}) {
+          prefetchHooksCallback:
+              ({semestreId = false, evaluacionesRefs = false}) {
+                return PrefetchHooks(
+                  db: db,
+                  explicitlyWatchedTables: [
+                    if (evaluacionesRefs) db.evaluaciones,
+                  ],
+                  addJoins:
+                      <
+                        T extends TableManagerState<
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic
+                        >
+                      >(state) {
+                        if (semestreId) {
+                          state = state.withJoin(
+                            currentTable: table,
+                            currentColumn: table.semestreId,
+                            referencedTable: $$MateriasTableReferences
+                                ._semestreIdTable(db),
+                            referencedColumn: $$MateriasTableReferences
+                                ._semestreIdTable(db)
+                                .id,
+                          ) as T;
+                        }
+
+                        return state;
+                      },
+                  getPrefetchedDataCallback: (items) async {
+                    return [
+                      if (evaluacionesRefs)
+                        await $_getPrefetchedDataByColumns<
+                          MateriaFila,
+                          $MateriasTable,
+                          EvaluacionFila,
+                          $EvaluacionesTable
+                        >(
+                          currentTable: table,
+                          referencedTable: $$MateriasTableReferences
+                              ._evaluacionesRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$MateriasTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).evaluacionesRefs,
+                          currentColumn: 'id',
+                          referencedColumn: 'materia_id',
+                          typedResults: items,
+                        ),
+                    ];
+                  },
+                );
+              },
+        ),
+      );
+}
+
+typedef $$MateriasTableProcessedTableManager =
+    ProcessedTableManager<
+      _$BaseDatos,
+      $MateriasTable,
+      MateriaFila,
+      $$MateriasTableFilterComposer,
+      $$MateriasTableOrderingComposer,
+      $$MateriasTableAnnotationComposer,
+      $$MateriasTableCreateCompanionBuilder,
+      $$MateriasTableUpdateCompanionBuilder,
+      (MateriaFila, $$MateriasTableReferences),
+      MateriaFila,
+      PrefetchHooks Function({bool semestreId, bool evaluacionesRefs})
+    >;
+typedef $$EvaluacionesTableCreateCompanionBuilder =
+    EvaluacionesCompanion Function({
+      Value<int> id,
+      required int materiaId,
+      Value<int?> padreId,
+      required String nombre,
+      Value<int?> porcentaje,
+      Value<int?> nota,
+      Value<DateTime?> fecha,
+      Value<int?> notaSupuesta,
+    });
+typedef $$EvaluacionesTableUpdateCompanionBuilder =
+    EvaluacionesCompanion Function({
+      Value<int> id,
+      Value<int> materiaId,
+      Value<int?> padreId,
+      Value<String> nombre,
+      Value<int?> porcentaje,
+      Value<int?> nota,
+      Value<DateTime?> fecha,
+      Value<int?> notaSupuesta,
+    });
+
+final class $$EvaluacionesTableReferences
+    extends BaseReferences<_$BaseDatos, $EvaluacionesTable, EvaluacionFila> {
+  $$EvaluacionesTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static $MateriasTable _materiaIdTable(_$BaseDatos db) =>
+      db.materias.createAlias('evaluaciones__materia_id__materias__id');
+
+  $$MateriasTableProcessedTableManager get materiaId {
+    final $_column = $_itemColumn<int>('materia_id')!;
+
+    final manager = $$MateriasTableTableManager(
+      $_db,
+      $_db.materias,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_materiaIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$EvaluacionesTableFilterComposer
+    extends Composer<_$BaseDatos, $EvaluacionesTable> {
+  $$EvaluacionesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get padreId => $composableBuilder(
+    column: $table.padreId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get nombre => $composableBuilder(
+    column: $table.nombre,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get porcentaje => $composableBuilder(
+    column: $table.porcentaje,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get nota => $composableBuilder(
+    column: $table.nota,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get fecha => $composableBuilder(
+    column: $table.fecha,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get notaSupuesta => $composableBuilder(
+    column: $table.notaSupuesta,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$MateriasTableFilterComposer get materiaId {
+    final $$MateriasTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.materiaId,
+      referencedTable: $db.materias,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$MateriasTableFilterComposer(
+            $db: $db,
+            $table: $db.materias,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$EvaluacionesTableOrderingComposer
+    extends Composer<_$BaseDatos, $EvaluacionesTable> {
+  $$EvaluacionesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get padreId => $composableBuilder(
+    column: $table.padreId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get nombre => $composableBuilder(
+    column: $table.nombre,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get porcentaje => $composableBuilder(
+    column: $table.porcentaje,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get nota => $composableBuilder(
+    column: $table.nota,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get fecha => $composableBuilder(
+    column: $table.fecha,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get notaSupuesta => $composableBuilder(
+    column: $table.notaSupuesta,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$MateriasTableOrderingComposer get materiaId {
+    final $$MateriasTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.materiaId,
+      referencedTable: $db.materias,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$MateriasTableOrderingComposer(
+            $db: $db,
+            $table: $db.materias,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$EvaluacionesTableAnnotationComposer
+    extends Composer<_$BaseDatos, $EvaluacionesTable> {
+  $$EvaluacionesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<int> get padreId =>
+      $composableBuilder(column: $table.padreId, builder: (column) => column);
+
+  GeneratedColumn<String> get nombre =>
+      $composableBuilder(column: $table.nombre, builder: (column) => column);
+
+  GeneratedColumn<int> get porcentaje => $composableBuilder(
+    column: $table.porcentaje,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get nota =>
+      $composableBuilder(column: $table.nota, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get fecha =>
+      $composableBuilder(column: $table.fecha, builder: (column) => column);
+
+  GeneratedColumn<int> get notaSupuesta => $composableBuilder(
+    column: $table.notaSupuesta,
+    builder: (column) => column,
+  );
+
+  $$MateriasTableAnnotationComposer get materiaId {
+    final $$MateriasTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.materiaId,
+      referencedTable: $db.materias,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$MateriasTableAnnotationComposer(
+            $db: $db,
+            $table: $db.materias,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$EvaluacionesTableTableManager
+    extends
+        RootTableManager<
+          _$BaseDatos,
+          $EvaluacionesTable,
+          EvaluacionFila,
+          $$EvaluacionesTableFilterComposer,
+          $$EvaluacionesTableOrderingComposer,
+          $$EvaluacionesTableAnnotationComposer,
+          $$EvaluacionesTableCreateCompanionBuilder,
+          $$EvaluacionesTableUpdateCompanionBuilder,
+          (EvaluacionFila, $$EvaluacionesTableReferences),
+          EvaluacionFila,
+          PrefetchHooks Function({bool materiaId})
+        > {
+  $$EvaluacionesTableTableManager(_$BaseDatos db, $EvaluacionesTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$EvaluacionesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$EvaluacionesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$EvaluacionesTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<int> materiaId = const Value.absent(),
+                Value<int?> padreId = const Value.absent(),
+                Value<String> nombre = const Value.absent(),
+                Value<int?> porcentaje = const Value.absent(),
+                Value<int?> nota = const Value.absent(),
+                Value<DateTime?> fecha = const Value.absent(),
+                Value<int?> notaSupuesta = const Value.absent(),
+              }) => EvaluacionesCompanion(
+                id: id,
+                materiaId: materiaId,
+                padreId: padreId,
+                nombre: nombre,
+                porcentaje: porcentaje,
+                nota: nota,
+                fecha: fecha,
+                notaSupuesta: notaSupuesta,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required int materiaId,
+                Value<int?> padreId = const Value.absent(),
+                required String nombre,
+                Value<int?> porcentaje = const Value.absent(),
+                Value<int?> nota = const Value.absent(),
+                Value<DateTime?> fecha = const Value.absent(),
+                Value<int?> notaSupuesta = const Value.absent(),
+              }) => EvaluacionesCompanion.insert(
+                id: id,
+                materiaId: materiaId,
+                padreId: padreId,
+                nombre: nombre,
+                porcentaje: porcentaje,
+                nota: nota,
+                fecha: fecha,
+                notaSupuesta: notaSupuesta,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$EvaluacionesTable, EvaluacionFila>(table),
+                  $$EvaluacionesTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({materiaId = false}) {
             return PrefetchHooks(
               db: db,
               explicitlyWatchedTables: [],
@@ -2528,14 +3514,14 @@ class $$MateriasTableTableManager
                       dynamic
                     >
                   >(state) {
-                    if (semestreId) {
+                    if (materiaId) {
                       state = state.withJoin(
                         currentTable: table,
-                        currentColumn: table.semestreId,
-                        referencedTable: $$MateriasTableReferences
-                            ._semestreIdTable(db),
-                        referencedColumn: $$MateriasTableReferences
-                            ._semestreIdTable(db)
+                        currentColumn: table.materiaId,
+                        referencedTable: $$EvaluacionesTableReferences
+                            ._materiaIdTable(db),
+                        referencedColumn: $$EvaluacionesTableReferences
+                            ._materiaIdTable(db)
                             .id,
                       ) as T;
                     }
@@ -2551,19 +3537,19 @@ class $$MateriasTableTableManager
       );
 }
 
-typedef $$MateriasTableProcessedTableManager =
+typedef $$EvaluacionesTableProcessedTableManager =
     ProcessedTableManager<
       _$BaseDatos,
-      $MateriasTable,
-      MateriaFila,
-      $$MateriasTableFilterComposer,
-      $$MateriasTableOrderingComposer,
-      $$MateriasTableAnnotationComposer,
-      $$MateriasTableCreateCompanionBuilder,
-      $$MateriasTableUpdateCompanionBuilder,
-      (MateriaFila, $$MateriasTableReferences),
-      MateriaFila,
-      PrefetchHooks Function({bool semestreId})
+      $EvaluacionesTable,
+      EvaluacionFila,
+      $$EvaluacionesTableFilterComposer,
+      $$EvaluacionesTableOrderingComposer,
+      $$EvaluacionesTableAnnotationComposer,
+      $$EvaluacionesTableCreateCompanionBuilder,
+      $$EvaluacionesTableUpdateCompanionBuilder,
+      (EvaluacionFila, $$EvaluacionesTableReferences),
+      EvaluacionFila,
+      PrefetchHooks Function({bool materiaId})
     >;
 
 class $BaseDatosManager {
@@ -2575,4 +3561,6 @@ class $BaseDatosManager {
       $$SemestresTableTableManager(_db, _db.semestres);
   $$MateriasTableTableManager get materias =>
       $$MateriasTableTableManager(_db, _db.materias);
+  $$EvaluacionesTableTableManager get evaluaciones =>
+      $$EvaluacionesTableTableManager(_db, _db.evaluaciones);
 }

@@ -6,6 +6,7 @@ import '../dominio/formato_fecha.dart';
 import '../dominio/materia.dart';
 import '../dominio/redondeo.dart';
 import '../estado/providers.dart';
+import 'evaluaciones_seccion.dart';
 import 'materia_form_page.dart';
 import 'widgets_materia.dart';
 
@@ -177,6 +178,8 @@ class _Detalle extends ConsumerWidget {
               ),
             ),
             const SizedBox(height: 16),
+            EvaluacionesSeccion(materia: materia),
+            const SizedBox(height: 24),
             ..._acciones(context, ref, escala),
           ],
         ),
@@ -194,7 +197,7 @@ class _Detalle extends ConsumerWidget {
       case EstadoMateria.enCurso:
         return [
           Text(
-            'Las evaluaciones y la definitiva calculada llegan en el '
+            'La definitiva calculada con las evaluaciones llega en el '
             'siguiente módulo. Por ahora puedes registrar la nota final a mano.',
             style: tema.textTheme.bodySmall,
           ),

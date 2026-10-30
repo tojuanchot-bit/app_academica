@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../datos/base_datos.dart';
+import '../dominio/evaluacion.dart';
 import '../dominio/materia.dart';
 import '../dominio/perfil.dart';
 import '../dominio/semestre.dart';
@@ -32,4 +33,10 @@ final materiasProvider =
 /// Una materia por id; null si se eliminó.
 final materiaProvider = StreamProvider.family<Materia?, int>((ref, id) {
   return ref.watch(baseDatosProvider).observarMateria(id);
+});
+
+/// Evaluaciones de una materia (el argumento es el id de la materia).
+final evaluacionesProvider =
+    StreamProvider.family<List<Evaluacion>, int>((ref, materiaId) {
+  return ref.watch(baseDatosProvider).observarEvaluaciones(materiaId);
 });

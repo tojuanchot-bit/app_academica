@@ -2,6 +2,7 @@ import 'package:drift/drift.dart';
 import 'package:drift_flutter/drift_flutter.dart';
 
 import '../dominio/configuracion_escala.dart';
+import '../dominio/evaluacion.dart';
 import '../dominio/materia.dart';
 import '../dominio/perfil.dart';
 import '../dominio/redondeo.dart';
@@ -54,14 +55,33 @@ class Materias extends Table {
   IntColumn get notaFinal => integer().nullable()();
 }
 
-@DriftDatabase(tables: [Perfiles, Semestres, Materias])
+@DataClassName('EvaluacionFila')
+class Evaluaciones extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  IntColumn get materiaId => integer()
+      .references(Materias, #id, onDelete: KeyAction.cascade)();
+
+  /// Evaluación compuesta a la que pertenece; null en el primer nivel.
+  IntColumn get padreId => integer().nullable()();
+  TextColumn get nombre => text()();
+
+  /// En centésimas de % (30 % = 3000).
+  IntColumn get porcentaje => integer().nullable()();
+
+  /// En centésimas (3.5 = 350).
+  IntColumn get nota => integer().nullable()();
+  DateTimeColumn get fecha => dateTime().nullable()();
+  IntColumn get notaSupuesta => integer().nullable()();
+}
+
+@DriftDatabase(tables: [Perfiles, Semestres, Materias, Evaluaciones])
 class BaseDatos extends _$BaseDatos {
   BaseDatos([QueryExecutor? executor])
       : super(executor ?? driftDatabase(name: 'app_academica'));
 
-  /// 1: perfil y escala. 2: semestres y materias.
+  /// 1: perfil y escala. 2: semestres y materias. 3: evaluaciones.
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -70,6 +90,9 @@ class BaseDatos extends _$BaseDatos {
           if (from < 2) {
             await m.createTable(semestres);
             await m.createTable(materias);
+          }
+          if (from < 3) {
+            await m.createTable(evaluaciones);
           }
         },
         beforeOpen: (details) async {
@@ -229,5 +252,52 @@ class BaseDatos extends _$BaseDatos {
 
   Future<void> eliminarMateria(int id) async {
     await (delete(materias)..where((t) => t.id.equals(id))).go();
+  }
+
+  // ---------------------------------------------------------- Evaluaciones
+
+  static Evaluacion _aEvaluacion(EvaluacionFila f) => Evaluacion(
+        id: f.id,
+        materiaId: f.materiaId,
+        padreId: f.padreId,
+        nombre: f.nombre,
+        porcentaje: f.porcentaje,
+        nota: f.nota,
+        fecha: f.fecha,
+        notaSupuesta: f.notaSupuesta,
+      );
+
+  /// Todas las evaluaciones de una materia (primer nivel y sub-evaluaciones),
+  /// en el orden en que se crearon.
+  Stream<List<Evaluacion>> observarEvaluaciones(int materiaId) {
+    final consulta = select(evaluaciones)
+      ..where((t) => t.materiaId.equals(materiaId))
+      ..orderBy([(t) => OrderingTerm.asc(t.id)]);
+    return consulta.watch().map((filas) => filas.map(_aEvaluacion).toList());
+  }
+
+  /// Crea o actualiza. Devuelve el id de la evaluación.
+  Future<int> guardarEvaluacion(Evaluacion e) async {
+    final datos = EvaluacionesCompanion(
+      materiaId: Value(e.materiaId),
+      padreId: Value(e.padreId),
+      nombre: Value(e.nombre.trim()),
+      porcentaje: Value(e.porcentaje),
+      nota: Value(e.nota),
+      fecha: Value(e.fecha),
+      notaSupuesta: Value(e.notaSupuesta),
+    );
+    final id = e.id;
+    if (id == null) return into(evaluaciones).insert(datos);
+    await (update(evaluaciones)..where((t) => t.id.equals(id))).write(datos);
+    return id;
+  }
+
+  /// Borra la evaluación y sus sub-evaluaciones.
+  Future<void> eliminarEvaluacion(int id) {
+    return transaction(() async {
+      await (delete(evaluaciones)..where((t) => t.padreId.equals(id))).go();
+      await (delete(evaluaciones)..where((t) => t.id.equals(id))).go();
+    });
   }
 }
