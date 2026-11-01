@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../datos/base_datos.dart';
+import '../dominio/bloque_horario.dart';
 import '../dominio/evaluacion.dart';
 import '../dominio/materia.dart';
 import '../dominio/perfil.dart';
@@ -39,6 +40,18 @@ final materiaProvider = StreamProvider.family<Materia?, int>((ref, id) {
 final evaluacionesProvider =
     StreamProvider.family<List<Evaluacion>, int>((ref, materiaId) {
   return ref.watch(baseDatosProvider).observarEvaluaciones(materiaId);
+});
+
+/// Bloques de horario de un semestre (el argumento es el id del semestre).
+final bloquesSemestreProvider =
+    StreamProvider.family<List<BloqueHorario>, int>((ref, semestreId) {
+  return ref.watch(baseDatosProvider).observarBloquesDeSemestre(semestreId);
+});
+
+/// Bloques de horario de una materia (el argumento es el id de la materia).
+final bloquesMateriaProvider =
+    StreamProvider.family<List<BloqueHorario>, int>((ref, materiaId) {
+  return ref.watch(baseDatosProvider).observarBloquesDeMateria(materiaId);
 });
 
 /// Materias de todos los semestres (para el promedio acumulado).

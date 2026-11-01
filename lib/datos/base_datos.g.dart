@@ -2067,6 +2067,398 @@ class EvaluacionesCompanion extends UpdateCompanion<EvaluacionFila> {
   }
 }
 
+class $BloquesHorarioTable extends BloquesHorario
+    with TableInfo<$BloquesHorarioTable, BloqueFila> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $BloquesHorarioTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _materiaIdMeta = const VerificationMeta(
+    'materiaId',
+  );
+  @override
+  late final GeneratedColumn<int> materiaId = GeneratedColumn<int>(
+    'materia_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES materias (id) ON DELETE CASCADE',
+    ),
+  );
+  static const VerificationMeta _diaMeta = const VerificationMeta('dia');
+  @override
+  late final GeneratedColumn<int> dia = GeneratedColumn<int>(
+    'dia',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _inicioMeta = const VerificationMeta('inicio');
+  @override
+  late final GeneratedColumn<int> inicio = GeneratedColumn<int>(
+    'inicio',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _finMeta = const VerificationMeta('fin');
+  @override
+  late final GeneratedColumn<int> fin = GeneratedColumn<int>(
+    'fin',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _salonMeta = const VerificationMeta('salon');
+  @override
+  late final GeneratedColumn<String> salon = GeneratedColumn<String>(
+    'salon',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(''),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    materiaId,
+    dia,
+    inicio,
+    fin,
+    salon,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'bloques_horario';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<BloqueFila> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('materia_id')) {
+      context.handle(
+        _materiaIdMeta,
+        materiaId.isAcceptableOrUnknown(data['materia_id']!, _materiaIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_materiaIdMeta);
+    }
+    if (data.containsKey('dia')) {
+      context.handle(
+        _diaMeta,
+        dia.isAcceptableOrUnknown(data['dia']!, _diaMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_diaMeta);
+    }
+    if (data.containsKey('inicio')) {
+      context.handle(
+        _inicioMeta,
+        inicio.isAcceptableOrUnknown(data['inicio']!, _inicioMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_inicioMeta);
+    }
+    if (data.containsKey('fin')) {
+      context.handle(
+        _finMeta,
+        fin.isAcceptableOrUnknown(data['fin']!, _finMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_finMeta);
+    }
+    if (data.containsKey('salon')) {
+      context.handle(
+        _salonMeta,
+        salon.isAcceptableOrUnknown(data['salon']!, _salonMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  BloqueFila map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return BloqueFila(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      materiaId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}materia_id'],
+      )!,
+      dia: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}dia'],
+      )!,
+      inicio: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}inicio'],
+      )!,
+      fin: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}fin'],
+      )!,
+      salon: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}salon'],
+      )!,
+    );
+  }
+
+  @override
+  $BloquesHorarioTable createAlias(String alias) {
+    return $BloquesHorarioTable(attachedDatabase, alias);
+  }
+}
+
+class BloqueFila extends DataClass implements Insertable<BloqueFila> {
+  final int id;
+  final int materiaId;
+  final int dia;
+  final int inicio;
+  final int fin;
+  final String salon;
+  const BloqueFila({
+    required this.id,
+    required this.materiaId,
+    required this.dia,
+    required this.inicio,
+    required this.fin,
+    required this.salon,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['materia_id'] = Variable<int>(materiaId);
+    map['dia'] = Variable<int>(dia);
+    map['inicio'] = Variable<int>(inicio);
+    map['fin'] = Variable<int>(fin);
+    map['salon'] = Variable<String>(salon);
+    return map;
+  }
+
+  BloquesHorarioCompanion toCompanion(bool nullToAbsent) {
+    return BloquesHorarioCompanion(
+      id: Value(id),
+      materiaId: Value(materiaId),
+      dia: Value(dia),
+      inicio: Value(inicio),
+      fin: Value(fin),
+      salon: Value(salon),
+    );
+  }
+
+  factory BloqueFila.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return BloqueFila(
+      id: serializer.fromJson<int>(json['id']),
+      materiaId: serializer.fromJson<int>(json['materiaId']),
+      dia: serializer.fromJson<int>(json['dia']),
+      inicio: serializer.fromJson<int>(json['inicio']),
+      fin: serializer.fromJson<int>(json['fin']),
+      salon: serializer.fromJson<String>(json['salon']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'materiaId': serializer.toJson<int>(materiaId),
+      'dia': serializer.toJson<int>(dia),
+      'inicio': serializer.toJson<int>(inicio),
+      'fin': serializer.toJson<int>(fin),
+      'salon': serializer.toJson<String>(salon),
+    };
+  }
+
+  BloqueFila copyWith({
+    int? id,
+    int? materiaId,
+    int? dia,
+    int? inicio,
+    int? fin,
+    String? salon,
+  }) => BloqueFila(
+    id: id ?? this.id,
+    materiaId: materiaId ?? this.materiaId,
+    dia: dia ?? this.dia,
+    inicio: inicio ?? this.inicio,
+    fin: fin ?? this.fin,
+    salon: salon ?? this.salon,
+  );
+  BloqueFila copyWithCompanion(BloquesHorarioCompanion data) {
+    return BloqueFila(
+      id: data.id.present ? data.id.value : this.id,
+      materiaId: data.materiaId.present ? data.materiaId.value : this.materiaId,
+      dia: data.dia.present ? data.dia.value : this.dia,
+      inicio: data.inicio.present ? data.inicio.value : this.inicio,
+      fin: data.fin.present ? data.fin.value : this.fin,
+      salon: data.salon.present ? data.salon.value : this.salon,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('BloqueFila(')
+          ..write('id: $id, ')
+          ..write('materiaId: $materiaId, ')
+          ..write('dia: $dia, ')
+          ..write('inicio: $inicio, ')
+          ..write('fin: $fin, ')
+          ..write('salon: $salon')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, materiaId, dia, inicio, fin, salon);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is BloqueFila &&
+          other.id == this.id &&
+          other.materiaId == this.materiaId &&
+          other.dia == this.dia &&
+          other.inicio == this.inicio &&
+          other.fin == this.fin &&
+          other.salon == this.salon);
+}
+
+class BloquesHorarioCompanion extends UpdateCompanion<BloqueFila> {
+  final Value<int> id;
+  final Value<int> materiaId;
+  final Value<int> dia;
+  final Value<int> inicio;
+  final Value<int> fin;
+  final Value<String> salon;
+  const BloquesHorarioCompanion({
+    this.id = const Value.absent(),
+    this.materiaId = const Value.absent(),
+    this.dia = const Value.absent(),
+    this.inicio = const Value.absent(),
+    this.fin = const Value.absent(),
+    this.salon = const Value.absent(),
+  });
+  BloquesHorarioCompanion.insert({
+    this.id = const Value.absent(),
+    required int materiaId,
+    required int dia,
+    required int inicio,
+    required int fin,
+    this.salon = const Value.absent(),
+  }) : materiaId = Value(materiaId),
+       dia = Value(dia),
+       inicio = Value(inicio),
+       fin = Value(fin);
+  static Insertable<BloqueFila> custom({
+    Expression<int>? id,
+    Expression<int>? materiaId,
+    Expression<int>? dia,
+    Expression<int>? inicio,
+    Expression<int>? fin,
+    Expression<String>? salon,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (materiaId != null) 'materia_id': materiaId,
+      if (dia != null) 'dia': dia,
+      if (inicio != null) 'inicio': inicio,
+      if (fin != null) 'fin': fin,
+      if (salon != null) 'salon': salon,
+    });
+  }
+
+  BloquesHorarioCompanion copyWith({
+    Value<int>? id,
+    Value<int>? materiaId,
+    Value<int>? dia,
+    Value<int>? inicio,
+    Value<int>? fin,
+    Value<String>? salon,
+  }) {
+    return BloquesHorarioCompanion(
+      id: id ?? this.id,
+      materiaId: materiaId ?? this.materiaId,
+      dia: dia ?? this.dia,
+      inicio: inicio ?? this.inicio,
+      fin: fin ?? this.fin,
+      salon: salon ?? this.salon,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (materiaId.present) {
+      map['materia_id'] = Variable<int>(materiaId.value);
+    }
+    if (dia.present) {
+      map['dia'] = Variable<int>(dia.value);
+    }
+    if (inicio.present) {
+      map['inicio'] = Variable<int>(inicio.value);
+    }
+    if (fin.present) {
+      map['fin'] = Variable<int>(fin.value);
+    }
+    if (salon.present) {
+      map['salon'] = Variable<String>(salon.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('BloquesHorarioCompanion(')
+          ..write('id: $id, ')
+          ..write('materiaId: $materiaId, ')
+          ..write('dia: $dia, ')
+          ..write('inicio: $inicio, ')
+          ..write('fin: $fin, ')
+          ..write('salon: $salon')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$BaseDatos extends GeneratedDatabase {
   _$BaseDatos(QueryExecutor e) : super(e);
   $BaseDatosManager get managers => $BaseDatosManager(this);
@@ -2074,6 +2466,7 @@ abstract class _$BaseDatos extends GeneratedDatabase {
   late final $SemestresTable semestres = $SemestresTable(this);
   late final $MateriasTable materias = $MateriasTable(this);
   late final $EvaluacionesTable evaluaciones = $EvaluacionesTable(this);
+  late final $BloquesHorarioTable bloquesHorario = $BloquesHorarioTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -2083,6 +2476,7 @@ abstract class _$BaseDatos extends GeneratedDatabase {
     semestres,
     materias,
     evaluaciones,
+    bloquesHorario,
   ];
   @override
   StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules([
@@ -2099,6 +2493,13 @@ abstract class _$BaseDatos extends GeneratedDatabase {
         limitUpdateKind: UpdateKind.delete,
       ),
       result: [TableUpdate('evaluaciones', kind: UpdateKind.delete)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'materias',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('bloques_horario', kind: UpdateKind.delete)],
     ),
   ]);
 }
@@ -2764,6 +3165,24 @@ final class $$MateriasTableReferences
       manager.$state.copyWith(prefetchedData: cache),
     );
   }
+
+  static MultiTypedResultKey<$BloquesHorarioTable, List<BloqueFila>>
+  _bloquesHorarioRefsTable(_$BaseDatos db) => MultiTypedResultKey.fromTable(
+    db.bloquesHorario,
+    aliasName: 'materias__id__bloques_horario__materia_id',
+  );
+
+  $$BloquesHorarioTableProcessedTableManager get bloquesHorarioRefs {
+    final manager = $$BloquesHorarioTableTableManager(
+      $_db,
+      $_db.bloquesHorario,
+    ).filter((f) => f.materiaId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_bloquesHorarioRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
 }
 
 class $$MateriasTableFilterComposer
@@ -2855,6 +3274,31 @@ class $$MateriasTableFilterComposer
           }) => $$EvaluacionesTableFilterComposer(
             $db: $db,
             $table: $db.evaluaciones,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<bool> bloquesHorarioRefs(
+    Expression<bool> Function($$BloquesHorarioTableFilterComposer f) f,
+  ) {
+    final $$BloquesHorarioTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.bloquesHorario,
+      getReferencedColumn: (t) => t.materiaId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$BloquesHorarioTableFilterComposer(
+            $db: $db,
+            $table: $db.bloquesHorario,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -3020,6 +3464,31 @@ class $$MateriasTableAnnotationComposer
     );
     return f(composer);
   }
+
+  Expression<T> bloquesHorarioRefs<T extends Object>(
+    Expression<T> Function($$BloquesHorarioTableAnnotationComposer a) f,
+  ) {
+    final $$BloquesHorarioTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.bloquesHorario,
+      getReferencedColumn: (t) => t.materiaId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$BloquesHorarioTableAnnotationComposer(
+            $db: $db,
+            $table: $db.bloquesHorario,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
 }
 
 class $$MateriasTableTableManager
@@ -3035,7 +3504,11 @@ class $$MateriasTableTableManager
           $$MateriasTableUpdateCompanionBuilder,
           (MateriaFila, $$MateriasTableReferences),
           MateriaFila,
-          PrefetchHooks Function({bool semestreId, bool evaluacionesRefs})
+          PrefetchHooks Function({
+            bool semestreId,
+            bool evaluacionesRefs,
+            bool bloquesHorarioRefs,
+          })
         > {
   $$MateriasTableTableManager(_$BaseDatos db, $MateriasTable table)
     : super(
@@ -3101,11 +3574,16 @@ class $$MateriasTableTableManager
               )
               .toList(),
           prefetchHooksCallback:
-              ({semestreId = false, evaluacionesRefs = false}) {
+              ({
+                semestreId = false,
+                evaluacionesRefs = false,
+                bloquesHorarioRefs = false,
+              }) {
                 return PrefetchHooks(
                   db: db,
                   explicitlyWatchedTables: [
                     if (evaluacionesRefs) db.evaluaciones,
+                    if (bloquesHorarioRefs) db.bloquesHorario,
                   ],
                   addJoins:
                       <
@@ -3159,6 +3637,26 @@ class $$MateriasTableTableManager
                           referencedColumn: 'materia_id',
                           typedResults: items,
                         ),
+                      if (bloquesHorarioRefs)
+                        await $_getPrefetchedDataByColumns<
+                          MateriaFila,
+                          $MateriasTable,
+                          BloqueFila,
+                          $BloquesHorarioTable
+                        >(
+                          currentTable: table,
+                          referencedTable: $$MateriasTableReferences
+                              ._bloquesHorarioRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$MateriasTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).bloquesHorarioRefs,
+                          currentColumn: 'id',
+                          referencedColumn: 'materia_id',
+                          typedResults: items,
+                        ),
                     ];
                   },
                 );
@@ -3179,7 +3677,11 @@ typedef $$MateriasTableProcessedTableManager =
       $$MateriasTableUpdateCompanionBuilder,
       (MateriaFila, $$MateriasTableReferences),
       MateriaFila,
-      PrefetchHooks Function({bool semestreId, bool evaluacionesRefs})
+      PrefetchHooks Function({
+        bool semestreId,
+        bool evaluacionesRefs,
+        bool bloquesHorarioRefs,
+      })
     >;
 typedef $$EvaluacionesTableCreateCompanionBuilder =
     EvaluacionesCompanion Function({
@@ -3551,6 +4053,338 @@ typedef $$EvaluacionesTableProcessedTableManager =
       EvaluacionFila,
       PrefetchHooks Function({bool materiaId})
     >;
+typedef $$BloquesHorarioTableCreateCompanionBuilder =
+    BloquesHorarioCompanion Function({
+      Value<int> id,
+      required int materiaId,
+      required int dia,
+      required int inicio,
+      required int fin,
+      Value<String> salon,
+    });
+typedef $$BloquesHorarioTableUpdateCompanionBuilder =
+    BloquesHorarioCompanion Function({
+      Value<int> id,
+      Value<int> materiaId,
+      Value<int> dia,
+      Value<int> inicio,
+      Value<int> fin,
+      Value<String> salon,
+    });
+
+final class $$BloquesHorarioTableReferences
+    extends BaseReferences<_$BaseDatos, $BloquesHorarioTable, BloqueFila> {
+  $$BloquesHorarioTableReferences(
+    super.$_db,
+    super.$_table,
+    super.$_typedResult,
+  );
+
+  static $MateriasTable _materiaIdTable(_$BaseDatos db) =>
+      db.materias.createAlias('bloques_horario__materia_id__materias__id');
+
+  $$MateriasTableProcessedTableManager get materiaId {
+    final $_column = $_itemColumn<int>('materia_id')!;
+
+    final manager = $$MateriasTableTableManager(
+      $_db,
+      $_db.materias,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_materiaIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$BloquesHorarioTableFilterComposer
+    extends Composer<_$BaseDatos, $BloquesHorarioTable> {
+  $$BloquesHorarioTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get dia => $composableBuilder(
+    column: $table.dia,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get inicio => $composableBuilder(
+    column: $table.inicio,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get fin => $composableBuilder(
+    column: $table.fin,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get salon => $composableBuilder(
+    column: $table.salon,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$MateriasTableFilterComposer get materiaId {
+    final $$MateriasTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.materiaId,
+      referencedTable: $db.materias,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$MateriasTableFilterComposer(
+            $db: $db,
+            $table: $db.materias,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$BloquesHorarioTableOrderingComposer
+    extends Composer<_$BaseDatos, $BloquesHorarioTable> {
+  $$BloquesHorarioTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get dia => $composableBuilder(
+    column: $table.dia,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get inicio => $composableBuilder(
+    column: $table.inicio,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get fin => $composableBuilder(
+    column: $table.fin,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get salon => $composableBuilder(
+    column: $table.salon,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$MateriasTableOrderingComposer get materiaId {
+    final $$MateriasTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.materiaId,
+      referencedTable: $db.materias,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$MateriasTableOrderingComposer(
+            $db: $db,
+            $table: $db.materias,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$BloquesHorarioTableAnnotationComposer
+    extends Composer<_$BaseDatos, $BloquesHorarioTable> {
+  $$BloquesHorarioTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<int> get dia =>
+      $composableBuilder(column: $table.dia, builder: (column) => column);
+
+  GeneratedColumn<int> get inicio =>
+      $composableBuilder(column: $table.inicio, builder: (column) => column);
+
+  GeneratedColumn<int> get fin =>
+      $composableBuilder(column: $table.fin, builder: (column) => column);
+
+  GeneratedColumn<String> get salon =>
+      $composableBuilder(column: $table.salon, builder: (column) => column);
+
+  $$MateriasTableAnnotationComposer get materiaId {
+    final $$MateriasTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.materiaId,
+      referencedTable: $db.materias,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$MateriasTableAnnotationComposer(
+            $db: $db,
+            $table: $db.materias,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$BloquesHorarioTableTableManager
+    extends
+        RootTableManager<
+          _$BaseDatos,
+          $BloquesHorarioTable,
+          BloqueFila,
+          $$BloquesHorarioTableFilterComposer,
+          $$BloquesHorarioTableOrderingComposer,
+          $$BloquesHorarioTableAnnotationComposer,
+          $$BloquesHorarioTableCreateCompanionBuilder,
+          $$BloquesHorarioTableUpdateCompanionBuilder,
+          (BloqueFila, $$BloquesHorarioTableReferences),
+          BloqueFila,
+          PrefetchHooks Function({bool materiaId})
+        > {
+  $$BloquesHorarioTableTableManager(_$BaseDatos db, $BloquesHorarioTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$BloquesHorarioTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$BloquesHorarioTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$BloquesHorarioTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<int> materiaId = const Value.absent(),
+                Value<int> dia = const Value.absent(),
+                Value<int> inicio = const Value.absent(),
+                Value<int> fin = const Value.absent(),
+                Value<String> salon = const Value.absent(),
+              }) => BloquesHorarioCompanion(
+                id: id,
+                materiaId: materiaId,
+                dia: dia,
+                inicio: inicio,
+                fin: fin,
+                salon: salon,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required int materiaId,
+                required int dia,
+                required int inicio,
+                required int fin,
+                Value<String> salon = const Value.absent(),
+              }) => BloquesHorarioCompanion.insert(
+                id: id,
+                materiaId: materiaId,
+                dia: dia,
+                inicio: inicio,
+                fin: fin,
+                salon: salon,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$BloquesHorarioTable, BloqueFila>(table),
+                  $$BloquesHorarioTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({materiaId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (materiaId) {
+                      state = state.withJoin(
+                        currentTable: table,
+                        currentColumn: table.materiaId,
+                        referencedTable: $$BloquesHorarioTableReferences
+                            ._materiaIdTable(db),
+                        referencedColumn: $$BloquesHorarioTableReferences
+                            ._materiaIdTable(db)
+                            .id,
+                      ) as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$BloquesHorarioTableProcessedTableManager =
+    ProcessedTableManager<
+      _$BaseDatos,
+      $BloquesHorarioTable,
+      BloqueFila,
+      $$BloquesHorarioTableFilterComposer,
+      $$BloquesHorarioTableOrderingComposer,
+      $$BloquesHorarioTableAnnotationComposer,
+      $$BloquesHorarioTableCreateCompanionBuilder,
+      $$BloquesHorarioTableUpdateCompanionBuilder,
+      (BloqueFila, $$BloquesHorarioTableReferences),
+      BloqueFila,
+      PrefetchHooks Function({bool materiaId})
+    >;
 
 class $BaseDatosManager {
   final _$BaseDatos _db;
@@ -3563,4 +4397,6 @@ class $BaseDatosManager {
       $$MateriasTableTableManager(_db, _db.materias);
   $$EvaluacionesTableTableManager get evaluaciones =>
       $$EvaluacionesTableTableManager(_db, _db.evaluaciones);
+  $$BloquesHorarioTableTableManager get bloquesHorario =>
+      $$BloquesHorarioTableTableManager(_db, _db.bloquesHorario);
 }

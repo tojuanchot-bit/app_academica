@@ -1,6 +1,7 @@
 import 'package:drift/drift.dart';
 import 'package:drift_flutter/drift_flutter.dart';
 
+import '../dominio/bloque_horario.dart';
 import '../dominio/configuracion_escala.dart';
 import '../dominio/evaluacion.dart';
 import '../dominio/materia.dart';
@@ -74,14 +75,29 @@ class Evaluaciones extends Table {
   IntColumn get notaSupuesta => integer().nullable()();
 }
 
-@DriftDatabase(tables: [Perfiles, Semestres, Materias, Evaluaciones])
+/// Una clase semanal de una materia. Se borra sola si se borra la materia.
+/// Día 1 = lunes … 7 = domingo; horas en minutos desde medianoche.
+@DataClassName('BloqueFila')
+class BloquesHorario extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  IntColumn get materiaId => integer()
+      .references(Materias, #id, onDelete: KeyAction.cascade)();
+  IntColumn get dia => integer()();
+  IntColumn get inicio => integer()();
+  IntColumn get fin => integer()();
+  TextColumn get salon => text().withDefault(const Constant(''))();
+}
+
+@DriftDatabase(
+    tables: [Perfiles, Semestres, Materias, Evaluaciones, BloquesHorario])
 class BaseDatos extends _$BaseDatos {
   BaseDatos([QueryExecutor? executor])
       : super(executor ?? driftDatabase(name: 'app_academica'));
 
   /// 1: perfil y escala. 2: semestres y materias. 3: evaluaciones.
+  /// 4: bloques de horario.
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => 4;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -93,6 +109,9 @@ class BaseDatos extends _$BaseDatos {
           }
           if (from < 3) {
             await m.createTable(evaluaciones);
+          }
+          if (from < 4) {
+            await m.createTable(bloquesHorario);
           }
         },
         beforeOpen: (details) async {
@@ -306,5 +325,62 @@ class BaseDatos extends _$BaseDatos {
       await (delete(evaluaciones)..where((t) => t.padreId.equals(id))).go();
       await (delete(evaluaciones)..where((t) => t.id.equals(id))).go();
     });
+  }
+
+  // --------------------------------------------------------------- Horario
+
+  static BloqueHorario _aBloque(BloqueFila f) => BloqueHorario(
+        id: f.id,
+        materiaId: f.materiaId,
+        dia: f.dia,
+        inicio: f.inicio,
+        fin: f.fin,
+        salon: f.salon,
+      );
+
+  /// Los bloques de todas las materias de un semestre (de cualquier estado;
+  /// el filtro de canceladas y cerradas lo hacen las funciones de horario).
+  /// Es una consulta con JOIN: se vuelve a emitir si cambia un bloque o
+  /// una materia.
+  Stream<List<BloqueHorario>> observarBloquesDeSemestre(int semestreId) {
+    final consulta = select(bloquesHorario).join([
+      innerJoin(materias, materias.id.equalsExp(bloquesHorario.materiaId)),
+    ])
+      ..where(materias.semestreId.equals(semestreId));
+    return consulta.watch().map(
+          (filas) => [
+            for (final f in filas) _aBloque(f.readTable(bloquesHorario)),
+          ],
+        );
+  }
+
+  /// Los bloques de una materia (para su detalle y su formulario).
+  Stream<List<BloqueHorario>> observarBloquesDeMateria(int materiaId) {
+    final consulta = select(bloquesHorario)
+      ..where((t) => t.materiaId.equals(materiaId))
+      ..orderBy([
+        (t) => OrderingTerm.asc(t.dia),
+        (t) => OrderingTerm.asc(t.inicio),
+      ]);
+    return consulta.watch().map((filas) => filas.map(_aBloque).toList());
+  }
+
+  /// Crea o actualiza. Devuelve el id del bloque.
+  Future<int> guardarBloque(BloqueHorario b) async {
+    final datos = BloquesHorarioCompanion(
+      materiaId: Value(b.materiaId),
+      dia: Value(b.dia),
+      inicio: Value(b.inicio),
+      fin: Value(b.fin),
+      salon: Value(b.salon.trim()),
+    );
+    final id = b.id;
+    if (id == null) return into(bloquesHorario).insert(datos);
+    await (update(bloquesHorario)..where((t) => t.id.equals(id))).write(datos);
+    return id;
+  }
+
+  Future<void> eliminarBloque(int id) async {
+    await (delete(bloquesHorario)..where((t) => t.id.equals(id))).go();
   }
 }
