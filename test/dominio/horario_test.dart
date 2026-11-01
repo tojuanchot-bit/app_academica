@@ -152,4 +152,110 @@ void main() {
       expect(choquesCon(editado, existentes), isEmpty);
     });
   });
+
+  group('una materia con varias clases distintas', () {
+    // Estructura de Datos: lunes 7-9 en B-201 y miércoles 9-11 en L-3.
+    const lunes = BloqueHorario(
+        id: 10, materiaId: 1, dia: 1, inicio: 420, fin: 540, salon: 'B-201');
+    const miercoles = BloqueHorario(
+        id: 11, materiaId: 1, dia: 3, inicio: 540, fin: 660, salon: 'L-3');
+
+    test('cada día muestra su hora y su salón', () {
+      final semana = horarioSemanal([lunes, miercoles], materias);
+      expect(semana[1]!.single.bloque.salon, 'B-201');
+      expect(semana[1]!.single.bloque.rango, '7:00 – 9:00');
+      expect(semana[3]!.single.bloque.salon, 'L-3');
+      expect(semana[3]!.single.bloque.rango, '9:00 – 11:00');
+    });
+  });
+
+  group('clasesEnDias', () {
+    test('una clase por día, con la misma franja y salón, en orden', () {
+      const modelo = BloqueHorario(
+          materiaId: 1, dia: 1, inicio: 420, fin: 540, salon: 'B-201');
+      final r = clasesEnDias(modelo, {5, 1, 3});
+      expect([for (final b in r) b.dia], [1, 3, 5]);
+      expect(r.every((b) => b.inicio == 420 && b.fin == 540), isTrue);
+      expect(r.every((b) => b.salon == 'B-201' && b.id == null), isTrue);
+    });
+    test('sin días no crea nada', () {
+      const modelo =
+          BloqueHorario(materiaId: 1, dia: 1, inicio: 420, fin: 540);
+      expect(clasesEnDias(modelo, const []), isEmpty);
+    });
+  });
+
+  group('choquesPorClase', () {
+    final otras = [bloque(1, 2, 1, 600, 720)]; // Cálculo lunes 10-12
+    test('contra otras materias, una lista por clase', () {
+      const nuevas = [
+        BloqueHorario(materiaId: 1, dia: 1, inicio: 660, fin: 780),
+        BloqueHorario(materiaId: 1, dia: 3, inicio: 660, fin: 780),
+      ];
+      final r = choquesPorClase(nuevas, otras);
+      expect(r.length, 2);
+      expect([for (final b in r[0]) b.id], [1]);
+      expect(r[1], isEmpty);
+    });
+    test('entre clases de la misma materia', () {
+      const nuevas = [
+        BloqueHorario(materiaId: 0, dia: 2, inicio: 420, fin: 540),
+        BloqueHorario(materiaId: 0, dia: 2, inicio: 480, fin: 600),
+        BloqueHorario(materiaId: 0, dia: 2, inicio: 600, fin: 660),
+      ];
+      final r = choquesPorClase(nuevas, const []);
+      expect(r[0], [nuevas[1]]);
+      expect(r[1], [nuevas[0]]);
+      expect(r[2], isEmpty); // empieza cuando termina la segunda
+    });
+    test('sin clases', () {
+      expect(choquesPorClase(const [], otras), isEmpty);
+    });
+  });
+
+  group('cambiosDeHorario', () {
+    final a = bloque(1, 1, 1, 420, 540);
+    final b = bloque(2, 1, 3, 540, 660);
+    final c = bloque(3, 1, 5, 420, 540);
+
+    test('materia nueva: todo se inserta', () {
+      const nueva = BloqueHorario(materiaId: 7, dia: 2, inicio: 420, fin: 540);
+      final r = cambiosDeHorario(const [], [nueva]);
+      expect(r.insertar, [nueva]);
+      expect(r.actualizar, isEmpty);
+      expect(r.eliminar, isEmpty);
+    });
+    test('sin cambios no hace nada', () {
+      final r = cambiosDeHorario([a, b], [a, b]);
+      expect(r.insertar, isEmpty);
+      expect(r.actualizar, isEmpty);
+      expect(r.eliminar, isEmpty);
+    });
+    test('cambiar salón y hora de una, quitar otra y agregar una nueva', () {
+      final bEditada = b.copyWith(salon: 'L-3', inicio: 600, fin: 720);
+      const nueva = BloqueHorario(materiaId: 1, dia: 6, inicio: 480, fin: 600);
+      final r = cambiosDeHorario([a, b, c], [a, bEditada, nueva]);
+      expect(r.actualizar, [bEditada]);
+      expect(r.eliminar, [3]);
+      expect(r.insertar, [nueva]);
+    });
+    test('un id que no estaba se inserta sin id', () {
+      final ajena = bloque(99, 1, 4, 420, 540);
+      final r = cambiosDeHorario([a], [a, ajena]);
+      expect(r.insertar.single.id, isNull);
+      expect(r.insertar.single.dia, 4);
+    });
+    test('quitar todas', () {
+      expect(cambiosDeHorario([a, b], const []).eliminar, [1, 2]);
+    });
+  });
+
+  test('ordenarBloques por día y hora', () {
+    final r = ordenarBloques([
+      bloque(1, 1, 3, 420, 540),
+      bloque(2, 1, 1, 600, 720),
+      bloque(3, 1, 1, 420, 540),
+    ]);
+    expect([for (final b in r) b.id], [3, 2, 1]);
+  });
 }

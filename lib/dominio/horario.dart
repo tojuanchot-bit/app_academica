@@ -99,6 +99,95 @@ Set<int> idsConChoque(Iterable<BloqueHorario> bloques) => {
       ],
     };
 
+/// Para cada clase de [nuevas] (las de una materia que se está creando o
+/// editando, aún sin guardar), los bloques con que se cruza: de [otras]
+/// (las de las demás materias) y de las demás clases de [nuevas].
+/// El resultado tiene una lista por clase, en el mismo orden.
+List<List<BloqueHorario>> choquesPorClase(
+  List<BloqueHorario> nuevas,
+  Iterable<BloqueHorario> otras,
+) {
+  return [
+    for (var i = 0; i < nuevas.length; i++)
+      [
+        for (final b in otras)
+          if (nuevas[i].seCruzaCon(b)) b,
+        for (var j = 0; j < nuevas.length; j++)
+          if (j != i && nuevas[i].seCruzaCon(nuevas[j])) nuevas[j],
+      ]..sort(_compararBloques),
+  ];
+}
+
+/// Una clase por cada día de [dias], con la misma franja y salón.
+/// Sirve para "lunes y miércoles de 7:00 a 9:00 en B-201".
+List<BloqueHorario> clasesEnDias(BloqueHorario modelo, Iterable<int> dias) {
+  final ordenados = dias.toSet().toList()..sort();
+  return [
+    for (final d in ordenados)
+      BloqueHorario(
+        materiaId: modelo.materiaId,
+        dia: d,
+        inicio: modelo.inicio,
+        fin: modelo.fin,
+        salon: modelo.salon,
+      ),
+  ];
+}
+
+/// Qué hacer en la base de datos para pasar de las clases guardadas
+/// ([antes]) a las del formulario ([despues]).
+typedef CambiosHorario = ({
+  List<BloqueHorario> insertar,
+  List<BloqueHorario> actualizar,
+  List<int> eliminar,
+});
+
+/// - Sin id (o con un id que no estaba): se inserta, sin id.
+/// - Con id que estaba y algo cambió: se actualiza.
+/// - Estaba y ya no está: se elimina.
+/// Las que no cambiaron no se tocan.
+CambiosHorario cambiosDeHorario(
+  Iterable<BloqueHorario> antes,
+  Iterable<BloqueHorario> despues,
+) {
+  final antesPorId = {
+    for (final b in antes)
+      if (b.id != null) b.id!: b,
+  };
+  final idsDespues = {
+    for (final b in despues)
+      if (b.id != null && antesPorId.containsKey(b.id)) b.id!,
+  };
+  final insertar = <BloqueHorario>[];
+  final actualizar = <BloqueHorario>[];
+  for (final b in despues) {
+    final previo = antesPorId[b.id];
+    if (previo == null) {
+      insertar.add(BloqueHorario(
+        materiaId: b.materiaId,
+        dia: b.dia,
+        inicio: b.inicio,
+        fin: b.fin,
+        salon: b.salon,
+      ));
+    } else if (previo != b) {
+      actualizar.add(b);
+    }
+  }
+  return (
+    insertar: insertar,
+    actualizar: actualizar,
+    eliminar: [
+      for (final id in antesPorId.keys)
+        if (!idsDespues.contains(id)) id,
+    ],
+  );
+}
+
+/// Orden de lectura: día, inicio, fin.
+List<BloqueHorario> ordenarBloques(Iterable<BloqueHorario> bloques) =>
+    [...bloques]..sort(_compararBloques);
+
 int _compararBloques(BloqueHorario x, BloqueHorario y) {
   if (x.dia != y.dia) return x.dia.compareTo(y.dia);
   if (x.inicio != y.inicio) return x.inicio.compareTo(y.inicio);

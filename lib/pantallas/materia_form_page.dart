@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../dominio/bloque_horario.dart';
+import '../dominio/horario.dart';
 import '../dominio/materia.dart';
 import '../estado/providers.dart';
+import 'clase_campos.dart';
 import 'widgets_materia.dart';
 
-/// Crear una materia en un semestre, o editar sus datos.
+/// Crear una materia en un semestre con su horario, o editar ambos.
+/// Cada clase tiene su propio día, hora y salón.
 class MateriaFormPage extends ConsumerStatefulWidget {
   const MateriaFormPage({
     super.key,
@@ -29,6 +33,14 @@ class _MateriaFormPageState extends ConsumerState<MateriaFormPage> {
   late int _color;
   bool _guardando = false;
 
+  /// Clases del formulario, aún sin guardar. Al editar, empiezan con las
+  /// guardadas (con su id); las nuevas no tienen id.
+  List<BloqueHorario> _clases = const [];
+
+  /// Al editar hay que esperar a leer las clases guardadas; guardar antes
+  /// borraría el horario.
+  late bool _clasesCargadas;
+
   @override
   void initState() {
     super.initState();
@@ -37,6 +49,20 @@ class _MateriaFormPageState extends ConsumerState<MateriaFormPage> {
     _docente = TextEditingController(text: e?.docente ?? '');
     _creditos = TextEditingController(text: e?.creditos.toString() ?? '');
     _color = e?.color ?? widget.colorInicial;
+    _clasesCargadas = e == null;
+    if (e != null) _cargarClases(e.id!);
+  }
+
+  Future<void> _cargarClases(int materiaId) async {
+    final guardadas = await ref
+        .read(baseDatosProvider)
+        .observarBloquesDeMateria(materiaId)
+        .first;
+    if (!mounted) return;
+    setState(() {
+      _clases = ordenarBloques(guardadas);
+      _clasesCargadas = true;
+    });
   }
 
   @override
@@ -71,10 +97,35 @@ class _MateriaFormPageState extends ConsumerState<MateriaFormPage> {
     );
   }
 
-  Future<void> _guardar(Materia materia) async {
+  Future<void> _agregarClases() async {
+    final nuevas = await pedirClases(context);
+    if (nuevas == null || !mounted) return;
+    setState(() => _clases = ordenarBloques([..._clases, ...nuevas]));
+  }
+
+  Future<void> _editarClase(int indice) async {
+    final editada = await pedirClases(context, inicial: _clases[indice]);
+    if (editada == null || !mounted) return;
+    setState(() {
+      final copia = [..._clases]..[indice] = editada.single;
+      _clases = ordenarBloques(copia);
+    });
+  }
+
+  void _quitarClase(int indice) {
+    setState(() => _clases = [..._clases]..removeAt(indice));
+  }
+
+  Future<void> _guardar(Materia materia, List<String> choques) async {
+    if (choques.isNotEmpty && !await confirmarChoques(context, choques)) {
+      return;
+    }
+    if (!mounted) return;
     setState(() => _guardando = true);
     try {
-      await ref.read(baseDatosProvider).guardarMateria(materia);
+      await ref
+          .read(baseDatosProvider)
+          .guardarMateriaConHorario(materia, _clases);
       if (!mounted) return;
       Navigator.of(context).pop();
     } catch (e) {
@@ -92,7 +143,7 @@ class _MateriaFormPageState extends ConsumerState<MateriaFormPage> {
     final materia = _materiaEscrita();
     final errores = materia?.validar() ?? const <ErrorMateria>{};
     final lista = (materia != null && errores.isEmpty) ? materia : null;
-    final puedeGuardar = lista != null && !_guardando;
+    final puedeGuardar = lista != null && _clasesCargadas && !_guardando;
 
     String? errorCreditos;
     if (_creditos.text.trim().isNotEmpty && materia == null) {
@@ -100,6 +151,35 @@ class _MateriaFormPageState extends ConsumerState<MateriaFormPage> {
     } else if (errores.contains(ErrorMateria.creditosFueraDeRango)) {
       errorCreditos = ErrorMateria.creditosFueraDeRango.mensaje;
     }
+
+    // Choques: contra las clases visibles de las demás materias del
+    // semestre y entre las clases de esta misma materia.
+    final materias =
+        switch (ref.watch(materiasProvider(widget.semestreId))) {
+      AsyncData(:final value) => value,
+      _ => const <Materia>[],
+    };
+    final bloques =
+        switch (ref.watch(bloquesSemestreProvider(widget.semestreId))) {
+      AsyncData(:final value) => value,
+      _ => const <BloqueHorario>[],
+    };
+    final idPropia = widget.existente?.id;
+    final otras = [
+      for (final c in clasesVisibles(bloques, materias))
+        if (c.materia.id != idPropia) c.bloque,
+    ];
+    final nombres = {
+      for (final m in materias)
+        if (m.id != null && m.id != idPropia) m.id!: m.nombre,
+    };
+    final choquesPorFila = choquesPorClase(_clases, otras);
+    final choques = {
+      for (var i = 0; i < _clases.length; i++)
+        for (final b in choquesPorFila[i])
+          '${nombreDiaCorto(_clases[i].dia)} ${_clases[i].rango} con '
+              '${describirBloque(b, nombres)}',
+    }.toList();
 
     void alCambiar(String _) => setState(() {});
 
@@ -112,7 +192,7 @@ class _MateriaFormPageState extends ConsumerState<MateriaFormPage> {
             padding: const EdgeInsets.only(right: 8),
             child: FilledButton(
               onPressed:
-                  puedeGuardar ? () => _guardar(lista) : null,
+                  puedeGuardar ? () => _guardar(lista, choques) : null,
               child: const Text('Guardar'),
             ),
           ),
@@ -188,6 +268,69 @@ class _MateriaFormPageState extends ConsumerState<MateriaFormPage> {
                   ),
               ],
             ),
+            const SizedBox(height: 24),
+            Row(
+              children: [
+                Expanded(
+                  child: Text('Horario', style: tema.textTheme.titleMedium),
+                ),
+                TextButton.icon(
+                  onPressed: _clasesCargadas ? _agregarClases : null,
+                  icon: const Icon(Icons.add),
+                  label: const Text('Agregar clase'),
+                ),
+              ],
+            ),
+            if (!_clasesCargadas)
+              const Padding(
+                padding: EdgeInsets.all(16),
+                child: Center(child: CircularProgressIndicator()),
+              )
+            else if (_clases.isEmpty)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Text(
+                  'Agrega una clase por cada día, hora y salón; por ejemplo, '
+                  'lunes 7:00 – 9:00 en B-201 y miércoles 9:00 – 11:00 en '
+                  'L-3. Si es virtual o no tiene horario, déjalo vacío.',
+                  style: tema.textTheme.bodySmall,
+                ),
+              )
+            else
+              Card(
+                child: Column(
+                  children: [
+                    for (var i = 0; i < _clases.length; i++)
+                      ListTile(
+                        onTap: () => _editarClase(i),
+                        leading: choquesPorFila[i].isEmpty
+                            ? const Icon(Icons.schedule)
+                            : const Tooltip(
+                                message: 'Se cruza con otra clase',
+                                child: Icon(Icons.warning_amber_rounded,
+                                    color: colorAviso),
+                              ),
+                        title: Text(
+                            '${nombreDia(_clases[i].dia)} · ${_clases[i].rango}'),
+                        subtitle: _clases[i].salon.isEmpty
+                            ? null
+                            : Text('Salón ${_clases[i].salon}'),
+                        trailing: IconButton(
+                          tooltip: 'Quitar clase',
+                          onPressed: () => _quitarClase(i),
+                          icon: const Icon(Icons.close),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            if (choques.isNotEmpty) ...[
+              const SizedBox(height: 8),
+              AvisoChoque(
+                lineas: choques,
+                pie: 'Puedes guardar igual si es a propósito.',
+              ),
+            ],
           ],
         ),
       ),

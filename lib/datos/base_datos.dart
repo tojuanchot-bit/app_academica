@@ -4,6 +4,7 @@ import 'package:drift_flutter/drift_flutter.dart';
 import '../dominio/bloque_horario.dart';
 import '../dominio/configuracion_escala.dart';
 import '../dominio/evaluacion.dart';
+import '../dominio/horario.dart';
 import '../dominio/materia.dart';
 import '../dominio/perfil.dart';
 import '../dominio/redondeo.dart';
@@ -382,5 +383,45 @@ class BaseDatos extends _$BaseDatos {
 
   Future<void> eliminarBloque(int id) async {
     await (delete(bloquesHorario)..where((t) => t.id.equals(id))).go();
+  }
+
+  /// Guarda varias clases a la vez (una por día elegido). Todo o nada.
+  Future<void> guardarBloques(List<BloqueHorario> bloques) {
+    return transaction(() async {
+      for (final b in bloques) {
+        await guardarBloque(b);
+      }
+    });
+  }
+
+  /// Guarda la materia y deja su horario exactamente como [clases]:
+  /// inserta las nuevas, actualiza las cambiadas y borra las quitadas.
+  /// Es una transacción: si algo falla, no queda nada a medias.
+  /// Devuelve el id de la materia.
+  Future<int> guardarMateriaConHorario(
+    Materia materia,
+    List<BloqueHorario> clases,
+  ) {
+    return transaction(() async {
+      // Si es nueva, aquí nace su id; las clases lo necesitan.
+      final id = await guardarMateria(materia);
+      final antes = materia.id == null
+          ? const <BloqueHorario>[]
+          : await (select(bloquesHorario)
+                ..where((t) => t.materiaId.equals(id)))
+              .map(_aBloque)
+              .get();
+      final cambios = cambiosDeHorario(
+        antes,
+        [for (final c in clases) c.copyWith(materiaId: id)],
+      );
+      for (final idBloque in cambios.eliminar) {
+        await eliminarBloque(idBloque);
+      }
+      for (final b in [...cambios.actualizar, ...cambios.insertar]) {
+        await guardarBloque(b);
+      }
+      return id;
+    });
   }
 }

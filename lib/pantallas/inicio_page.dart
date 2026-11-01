@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'horario_page.dart';
 import 'hoy_page.dart';
 import 'materias_page.dart';
 
@@ -17,7 +18,7 @@ class _InicioState extends State<Inicio> {
   static const _paginas = <Widget>[
     HoyPage(),
     MateriasPage(),
-    Center(child: Text('Horario')),
+    HorarioPage(),
     Center(child: Text('Agenda')),
   ];
 

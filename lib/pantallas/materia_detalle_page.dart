@@ -7,6 +7,7 @@ import '../dominio/materia.dart';
 import '../dominio/redondeo.dart';
 import '../estado/providers.dart';
 import 'evaluaciones_seccion.dart';
+import 'horario_page.dart';
 import 'materia_form_page.dart';
 import 'resultado_materia.dart';
 import 'widgets_materia.dart';
@@ -179,6 +180,8 @@ class _Detalle extends ConsumerWidget {
               ),
             ),
             const SizedBox(height: 16),
+            HorarioMateriaSeccion(materia: materia),
+            const SizedBox(height: 16),
             EvaluacionesSeccion(materia: materia),
             if (materia.estado == EstadoMateria.enCurso) ...[
               const SizedBox(height: 24),
@@ -210,7 +213,7 @@ class _Detalle extends ConsumerWidget {
           OutlinedButton.icon(
             onPressed: () => _editar(context),
             icon: const Icon(Icons.edit_outlined),
-            label: const Text('Editar datos'),
+            label: const Text('Editar datos y horario'),
           ),
           const SizedBox(height: 8),
           OutlinedButton.icon(
