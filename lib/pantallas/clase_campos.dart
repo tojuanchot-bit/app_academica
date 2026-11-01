@@ -190,7 +190,7 @@ class AvisoChoque extends StatelessWidget {
                 [
                   'Se cruza con:',
                   ...lineas,
-                  if (pie case final p?) p,
+                  ?pie,
                 ].join('\n'),
                 style: const TextStyle(color: colorAviso),
               ),
