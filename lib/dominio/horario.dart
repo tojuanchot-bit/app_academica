@@ -184,6 +184,67 @@ CambiosHorario cambiosDeHorario(
   );
 }
 
+/// En qué punto del día está una clase de hoy.
+enum MomentoClase {
+  /// Ya terminó.
+  pasada,
+
+  /// Está en curso ahora mismo.
+  ahora,
+
+  /// La primera que falta por empezar.
+  siguiente,
+
+  /// Empieza más tarde, después de la siguiente.
+  despues,
+}
+
+typedef ClaseDeHoy = ({
+  Clase clase,
+  MomentoClase momento,
+
+  /// Minutos que faltan para que empiece; null si ya empezó.
+  int? faltan,
+});
+
+/// 7:30 → 450.
+int minutoDelDia(DateTime t) => t.hour * 60 + t.minute;
+
+/// Las clases de la fecha de [ahora], en orden, con su momento. Una clase
+/// está "ahora" desde su inicio hasta un minuto antes de su fin (a las
+/// 9:00 ya terminó la de 7:00 – 9:00).
+List<ClaseDeHoy> clasesDeHoy(
+  Iterable<BloqueHorario> bloques,
+  Iterable<Materia> materias,
+  DateTime ahora,
+) {
+  final minuto = minutoDelDia(ahora);
+  final resultado = <ClaseDeHoy>[];
+  var yaHaySiguiente = false;
+  for (final c in clasesDeFecha(bloques, materias, ahora)) {
+    if (c.bloque.fin <= minuto) {
+      resultado.add((clase: c, momento: MomentoClase.pasada, faltan: null));
+    } else if (c.bloque.inicio <= minuto) {
+      resultado.add((clase: c, momento: MomentoClase.ahora, faltan: null));
+    } else {
+      resultado.add((
+        clase: c,
+        momento: yaHaySiguiente ? MomentoClase.despues : MomentoClase.siguiente,
+        faltan: c.bloque.inicio - minuto,
+      ));
+      yaHaySiguiente = true;
+    }
+  }
+  return resultado;
+}
+
+/// "En 5 min", "En 1 h", "En 2 h 15 min".
+String formatearFaltan(int minutos) {
+  if (minutos < 60) return 'En $minutos min';
+  final h = minutos ~/ 60, m = minutos % 60;
+  return m == 0 ? 'En $h h' : 'En $h h $m min';
+}
+
 /// Orden de lectura: día, inicio, fin.
 List<BloqueHorario> ordenarBloques(Iterable<BloqueHorario> bloques) =>
     [...bloques]..sort(_compararBloques);

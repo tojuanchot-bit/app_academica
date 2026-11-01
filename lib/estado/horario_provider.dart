@@ -5,6 +5,19 @@ import '../dominio/materia.dart';
 import '../dominio/semestre.dart';
 import 'providers.dart';
 
+/// La hora actual, renovada cada 30 segundos. No viene de la base de datos
+/// sino de un temporizador: lo que la observe (las clases de Hoy) cambia
+/// solo de "siguiente" a "ahora" y a "pasada" con el paso del tiempo.
+/// Con `autoDispose`, el temporizador se destruye cuando ninguna pantalla
+/// lo observa (al salir de Hoy) y vuelve a empezar al regresar.
+final relojProvider = StreamProvider.autoDispose<DateTime>((ref) async* {
+  yield DateTime.now();
+  yield* Stream.periodic(
+    const Duration(seconds: 30),
+    (_) => DateTime.now(),
+  );
+});
+
 /// Lo que necesita la pantalla Horario: el semestre activo, sus materias
 /// (de todos los estados) y sus bloques. El filtro de canceladas y cerradas
 /// lo hacen las funciones de `dominio/horario.dart`.

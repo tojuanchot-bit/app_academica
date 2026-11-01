@@ -237,31 +237,66 @@ class ClaseTile extends StatelessWidget {
     required this.clase,
     this.conChoque = false,
     this.onTap,
+    this.etiqueta,
+    this.resaltada = false,
+    this.atenuada = false,
   });
 
   final Clase clase;
   final bool conChoque;
   final VoidCallback? onTap;
 
+  /// Texto corto a la derecha, por ejemplo "Ahora" o "En 25 min".
+  final String? etiqueta;
+
+  /// Fondo del color primario suave (la clase en curso o la siguiente).
+  final bool resaltada;
+
+  /// En gris (una clase de hoy que ya pasó).
+  final bool atenuada;
+
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     final b = clase.bloque;
     final detalle = [
       b.rango,
       if (b.salon.isNotEmpty) 'Salón ${b.salon}',
     ].join(' · ');
-    return Card(
-      child: ListTile(
-        onTap: onTap,
-        leading: BarraColor(clase.materia.color),
-        title: Text(clase.materia.nombre),
-        subtitle: Text(detalle),
-        trailing: conChoque
-            ? const Tooltip(
-                message: 'Se cruza con otra clase',
-                child: Icon(Icons.warning_amber_rounded, color: _colorAviso),
-              )
-            : null,
+    final etiqueta = this.etiqueta;
+    return Opacity(
+      opacity: atenuada ? 0.5 : 1,
+      child: Card(
+        color: resaltada ? cs.primaryContainer : null,
+        child: ListTile(
+          onTap: onTap,
+          leading: BarraColor(clase.materia.color),
+          title: Text(clase.materia.nombre),
+          subtitle: Text(detalle),
+          trailing: (etiqueta == null && !conChoque)
+              ? null
+              : Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (etiqueta != null)
+                      Text(
+                        etiqueta,
+                        style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                              color: resaltada ? cs.onPrimaryContainer : null,
+                              fontWeight: resaltada ? FontWeight.bold : null,
+                            ),
+                      ),
+                    if (conChoque) ...[
+                      const SizedBox(width: 4),
+                      const Tooltip(
+                        message: 'Se cruza con otra clase',
+                        child: Icon(Icons.warning_amber_rounded,
+                            color: _colorAviso),
+                      ),
+                    ],
+                  ],
+                ),
+        ),
       ),
     );
   }

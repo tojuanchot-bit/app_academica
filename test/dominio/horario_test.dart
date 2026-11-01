@@ -258,4 +258,67 @@ void main() {
     ]);
     expect([for (final b in r) b.id], [3, 2, 1]);
   });
+
+  group('clasesDeHoy', () {
+    // Lunes 2 nov 2026: Datos 7-9, Cálculo 10-12, Datos 14-16 y una
+    // clase de Inglés (cancelada) que no debe salir.
+    final lunes = [
+      bloque(1, 1, 1, 420, 540),
+      bloque(2, 2, 1, 600, 720),
+      bloque(3, 1, 1, 840, 960),
+      bloque(4, 3, 1, 480, 540),
+    ];
+    List<(int?, MomentoClase, int?)> a(int hora, int minuto) => [
+          for (final c
+              in clasesDeHoy(lunes, materias, DateTime(2026, 11, 2, hora, minuto)))
+            (c.clase.bloque.id, c.momento, c.faltan),
+        ];
+
+    test('antes de la primera clase', () {
+      expect(a(6, 30), [
+        (1, MomentoClase.siguiente, 30),
+        (2, MomentoClase.despues, 210),
+        (3, MomentoClase.despues, 450),
+      ]);
+    });
+    test('justo a la hora de inicio ya está en curso', () {
+      expect(a(7, 0), [
+        (1, MomentoClase.ahora, null),
+        (2, MomentoClase.siguiente, 180),
+        (3, MomentoClase.despues, 420),
+      ]);
+    });
+    test('justo a la hora de fin ya pasó', () {
+      expect(a(9, 0), [
+        (1, MomentoClase.pasada, null),
+        (2, MomentoClase.siguiente, 60),
+        (3, MomentoClase.despues, 300),
+      ]);
+    });
+    test('a media mañana: una pasada, una en curso y la siguiente', () {
+      expect(a(11, 0), [
+        (1, MomentoClase.pasada, null),
+        (2, MomentoClase.ahora, null),
+        (3, MomentoClase.siguiente, 180),
+      ]);
+    });
+    test('al final del día todas pasaron', () {
+      expect([for (final c in a(17, 0)) c.$2],
+          everyElement(MomentoClase.pasada));
+    });
+    test('domingo sin clases', () {
+      expect(clasesDeHoy(lunes, materias, DateTime(2026, 11, 8, 10)), isEmpty);
+    });
+    test('minutoDelDia', () {
+      expect(minutoDelDia(DateTime(2026, 11, 2, 7, 30)), 450);
+      expect(minutoDelDia(DateTime(2026, 11, 2)), 0);
+    });
+  });
+
+  test('formatearFaltan', () {
+    expect(formatearFaltan(5), 'En 5 min');
+    expect(formatearFaltan(59), 'En 59 min');
+    expect(formatearFaltan(60), 'En 1 h');
+    expect(formatearFaltan(135), 'En 2 h 15 min');
+  });
 }

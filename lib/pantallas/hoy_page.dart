@@ -3,16 +3,20 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../dominio/calculo_notas.dart';
 import '../dominio/formato_fecha.dart';
+import '../dominio/horario.dart';
 import '../dominio/materia.dart';
 import '../dominio/perfil.dart';
+import '../estado/horario_provider.dart';
 import '../estado/providers.dart';
 import 'configuracion_page.dart';
+import 'horario_page.dart';
 import 'materia_detalle_page.dart';
 import 'resultado_materia.dart';
 import 'widgets_materia.dart';
 
-/// Pantalla Hoy. Saludo, promedio acumulado y alertas son reales; avance de
-/// carrera, clases y pendientes siguen con datos fijos hasta sus fases.
+/// Pantalla Hoy. Saludo, promedio acumulado, alertas y clases de hoy son
+/// reales; avance de carrera (Fase 5) y pendientes (Fase 4) siguen con
+/// datos fijos hasta sus fases.
 class HoyPage extends ConsumerWidget {
   const HoyPage({super.key});
 
@@ -86,18 +90,7 @@ class HoyPage extends ConsumerWidget {
         const SizedBox(height: 20),
         Text('Clases de hoy', style: tema.textTheme.titleMedium),
         const SizedBox(height: 8),
-        const _ClaseTile(
-          materia: 'Estructura de Datos',
-          hora: '7:00 – 9:00',
-          salon: 'Salón B-201',
-          color: Color(0xFF6A4BC4),
-        ),
-        const _ClaseTile(
-          materia: 'Cálculo Integral',
-          hora: '10:00 – 12:00',
-          salon: 'Salón A-105',
-          color: Color(0xFF00838F),
-        ),
+        const _ClasesDeHoy(),
         const SizedBox(height: 20),
         Text('Pendientes', style: tema.textTheme.titleMedium),
         const SizedBox(height: 8),
@@ -218,34 +211,68 @@ class _Alertas extends ConsumerWidget {
   }
 }
 
-class _ClaseTile extends StatelessWidget {
-  const _ClaseTile({
-    required this.materia,
-    required this.hora,
-    required this.salon,
-    required this.color,
-  });
-
-  final String materia;
-  final String hora;
-  final String salon;
-  final Color color;
+/// Las clases de hoy según el horario del semestre activo. Las que ya
+/// pasaron van en gris; la que está en curso (o la siguiente) va resaltada.
+/// Se actualiza sola con [relojProvider].
+class _ClasesDeHoy extends ConsumerWidget {
+  const _ClasesDeHoy();
 
   @override
-  Widget build(BuildContext context) {
-    return Card(
-      child: ListTile(
-        leading: Container(
-          width: 6,
-          height: 40,
-          decoration: BoxDecoration(
-            color: color,
-            borderRadius: BorderRadius.circular(3),
-          ),
+  Widget build(BuildContext context, WidgetRef ref) {
+    final tema = Theme.of(context);
+    final ahora = switch (ref.watch(relojProvider)) {
+      AsyncData(:final value) => value,
+      _ => DateTime.now(),
+    };
+    final datos = switch (ref.watch(horarioActivoProvider)) {
+      AsyncData(:final value) => value,
+      _ => null,
+    };
+    if (datos == null) {
+      return Text('Activa un semestre en Materias para ver tus clases.',
+          style: tema.textTheme.bodySmall);
+    }
+
+    final clases = clasesDeHoy(datos.bloques, datos.materias, ahora);
+    if (clases.isEmpty) {
+      return const Card(
+        child: ListTile(
+          leading: Icon(Icons.free_breakfast_outlined),
+          title: Text('Hoy no tienes clases'),
         ),
-        title: Text(materia),
-        subtitle: Text('$hora · $salon'),
-      ),
+      );
+    }
+    final conChoque = idsConChoque([
+      for (final c in clasesVisibles(datos.bloques, datos.materias)) c.bloque,
+    ]);
+    final hayEnCurso = clases.any((c) => c.momento == MomentoClase.ahora);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        for (final c in clases)
+          ClaseTile(
+            clase: c.clase,
+            conChoque: conChoque.contains(c.clase.bloque.id),
+            atenuada: c.momento == MomentoClase.pasada,
+            // Se resalta la que está en curso; si no hay, la siguiente.
+            resaltada: c.momento == MomentoClase.ahora ||
+                (!hayEnCurso && c.momento == MomentoClase.siguiente),
+            etiqueta: switch (c.momento) {
+              MomentoClase.pasada => null,
+              MomentoClase.ahora => 'Ahora',
+              MomentoClase.siguiente ||
+              MomentoClase.despues =>
+                formatearFaltan(c.faltan!),
+            },
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                builder: (_) =>
+                    MateriaDetallePage(materiaId: c.clase.materia.id!),
+              ),
+            ),
+          ),
+      ],
     );
   }
 }
