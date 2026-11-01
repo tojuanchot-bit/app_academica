@@ -320,6 +320,19 @@ class BaseDatos extends _$BaseDatos {
     return id;
   }
 
+  /// Fija (o quita, con null) la nota supuesta de una evaluación. Solo
+  /// toca esa columna, para no pisar cambios hechos en otro lado.
+  Future<void> guardarNotaSupuesta(int id, int? valor) async {
+    await (update(evaluaciones)..where((t) => t.id.equals(id)))
+        .write(EvaluacionesCompanion(notaSupuesta: Value(valor)));
+  }
+
+  /// Quita todas las notas supuestas de una materia.
+  Future<void> quitarNotasSupuestas(int materiaId) async {
+    await (update(evaluaciones)..where((t) => t.materiaId.equals(materiaId)))
+        .write(const EvaluacionesCompanion(notaSupuesta: Value(null)));
+  }
+
   /// Borra la evaluación y sus sub-evaluaciones.
   Future<void> eliminarEvaluacion(int id) {
     return transaction(() async {

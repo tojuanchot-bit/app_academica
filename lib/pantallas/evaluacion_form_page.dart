@@ -146,7 +146,8 @@ class _EvaluacionFormPageState extends ConsumerState<EvaluacionFormPage> {
       porcentaje: porcentaje,
       nota: nota,
       fecha: _fecha,
-      notaSupuesta: existente?.notaSupuesta,
+      // Al registrar la nota real, la supuesta ya no sirve (fase 2b).
+      notaSupuesta: nota == null ? existente?.notaSupuesta : null,
     );
     final errores = validarEvaluacion(evaluacion, hermanas: hermanas);
 

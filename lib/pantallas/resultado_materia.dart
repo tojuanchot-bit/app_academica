@@ -6,6 +6,7 @@ import '../dominio/configuracion_escala.dart';
 import '../dominio/evaluacion.dart';
 import '../dominio/materia.dart';
 import '../estado/providers.dart';
+import 'notas_supuestas_seccion.dart';
 import 'widgets_materia.dart';
 
 /// Colores de estado de nota (D-012): texto y fondo.
@@ -55,11 +56,19 @@ class _ResultadoMateriaState extends ConsumerState<ResultadoMateria> {
 
     final metas = metasSugeridas(escala);
     final meta = (_meta != null && metas.contains(_meta)) ? _meta! : metas.first;
-    final proyeccion = proyectar(todas, escala, meta: meta);
+    // Solo esta sección usa las notas supuestas (Hoy y el cierre, no).
+    final proyeccion = proyectar(todas, escala, meta: meta, usarSupuestas: true);
     final acumulado = acumuladoPresentado(todas, escala);
-    final pendientes = contarPendientes(todas);
+    final buscadas = pendientesBuscadas(todas, usarSupuestas: true);
+    final hayFijadas = buscadas.length < contarPendientes(todas);
+    final conSupuestas = hayFijadas ? 'Con tus notas supuestas, ' : '';
     final f = escala.formatear;
-    final nombreMeta = meta == escala.notaAprobatoria ? 'aprobar' : f(meta);
+    final esAprobar = meta == escala.notaAprobatoria;
+    final nombreMeta = esAprobar ? 'aprobar' : f(meta);
+    final colorSupuesta = (
+      tema.colorScheme.onTertiaryContainer,
+      tema.colorScheme.tertiaryContainer,
+    );
 
     final Widget contenido;
     switch (proyeccion.tipo) {
@@ -91,31 +100,50 @@ class _ResultadoMateriaState extends ConsumerState<ResultadoMateria> {
             ),
           ],
         );
+      case TipoProyeccion.simulada:
+        // Todo lo pendiente está supuesto: no es real, no se puede cerrar.
+        final d = proyeccion.nota!;
+        final llega = d >= meta;
+        contenido = _Mensaje(
+          icono: Icons.push_pin,
+          colores: colorSupuesta,
+          texto: 'Con tus notas supuestas, la definitiva sería ${f(d)} · '
+              '${esAprobar ? (llega ? 'aprobarías' : 'no aprobarías') : (llega ? 'llegas a ${f(meta)}' : 'no llegas a ${f(meta)}')}.',
+        );
       case TipoProyeccion.asegurada:
         contenido = _Mensaje(
           icono: Icons.check_circle_outline,
           colores: _verde,
-          texto: 'Ya aseguraste $nombreMeta: aunque saques '
-              '${f(escala.notaMinima)} en lo que falta.',
+          texto: hayFijadas
+              ? '${conSupuestas}ya aseguras $nombreMeta: aunque saques '
+                  '${f(escala.notaMinima)} en lo que falta.'
+              : 'Ya aseguraste $nombreMeta: aunque saques '
+                  '${f(escala.notaMinima)} en lo que falta.',
         );
       case TipoProyeccion.necesita:
         final x = proyeccion.nota!;
         final enRiesgo = x > escala.notaAprobatoria;
+        final donde = buscadas.length == 1
+            ? _nombreCompleto(buscadas.single, todas)
+            : 'cada una de las ${buscadas.length} pendientes';
         contenido = _Mensaje(
           icono: enRiesgo ? Icons.warning_amber_rounded : Icons.trending_up,
           colores: enRiesgo ? _ambar : _verde,
-          texto: 'Necesitas ${f(x)} en '
-              '${pendientes == 1 ? 'la evaluación pendiente' : 'cada una de las $pendientes pendientes'} '
-              'para $nombreMeta.',
+          texto: hayFijadas
+              ? '${conSupuestas}necesitas ${f(x)} en $donde para $nombreMeta.'
+              : 'Necesitas ${f(x)} en $donde para $nombreMeta.',
         );
       case TipoProyeccion.noAlcanza:
         final maximo = proyeccion.definitivaMaxima;
+        final ni = 'ni con ${f(escala.notaMaxima)} en todo lo que falta '
+            'llegas a ${f(meta)}.'
+            '${maximo == null ? '' : ' Lo máximo posible es ${f(maximo)}.'}';
         contenido = _Mensaje(
           icono: Icons.cancel_outlined,
           colores: _rojo,
-          texto: 'Ni con ${f(escala.notaMaxima)} en todo lo que falta '
-              'llegas a ${f(meta)}.'
-              '${maximo == null ? '' : ' Lo máximo posible es ${f(maximo)}.'}',
+          texto: hayFijadas
+              ? '$conSupuestas$ni'
+              : '${ni[0].toUpperCase()}${ni.substring(1)}',
         );
     }
 
@@ -152,9 +180,25 @@ class _ResultadoMateriaState extends ConsumerState<ResultadoMateria> {
           const SizedBox(height: 8),
         ],
         contenido,
+        if (mostrarMetas)
+          NotasSupuestasSeccion(
+            materiaId: widget.materia.id!,
+            todas: todas,
+            escala: escala,
+          ),
       ],
     );
   }
+}
+
+/// "Trabajo final", o "Quiz 3 (Seguimiento)" si es una sub-evaluación.
+String _nombreCompleto(Evaluacion e, List<Evaluacion> todas) {
+  final padreId = e.padreId;
+  if (padreId == null) return e.nombre;
+  for (final p in todas) {
+    if (p.id == padreId) return '${e.nombre} (${p.nombre})';
+  }
+  return e.nombre;
 }
 
 class _Mensaje extends StatelessWidget {

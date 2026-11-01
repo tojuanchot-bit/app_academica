@@ -90,24 +90,41 @@ Fraccion? notaCompuesta(List<Evaluacion> hijas, ConfiguracionEscala escala) {
 
 // ------------------------------------------------- Definitiva (D-008)
 
-/// Valor de una evaluación de primer nivel. Las pendientes toman
-/// [notaPendientes] (si es null, quedan sin valor y se devuelve null).
+/// Nota con la que cuenta una evaluación sin hijas: la real; si no hay, la
+/// supuesta (solo con [usarSupuestas]); si tampoco, [notaPendientes].
+int? _notaHoja(Evaluacion e, int? notaPendientes, bool usarSupuestas) =>
+    e.nota ?? (usarSupuestas ? e.notaSupuesta : null) ?? notaPendientes;
+
+/// Nota supuesta de una compuesta entera. Solo vale si la compuesta sigue
+/// pendiente (alguna hija sin nota real); si no, mandan las notas reales.
+int? _supuestaEntera(Evaluacion compuesta, List<Evaluacion> hijas) =>
+    hijas.any((h) => h.nota == null) ? compuesta.notaSupuesta : null;
+
+/// Valor de una evaluación de primer nivel. Las pendientes toman su nota
+/// supuesta (con [usarSupuestas]) o [notaPendientes]; si no hay ninguna,
+/// quedan sin valor y se devuelve null.
 Fraccion? _valorEvaluacion(
   Evaluacion e,
   List<Evaluacion> todas,
   ConfiguracionEscala escala,
   int? notaPendientes,
+  bool usarSupuestas,
 ) {
   final id = e.id;
   final hijas = id == null ? const <Evaluacion>[] : hijasDe(todas, id);
   if (hijas.isEmpty) {
-    final n = e.nota ?? notaPendientes;
+    final n = _notaHoja(e, notaPendientes, usarSupuestas);
     return n == null ? null : Fraccion(n, 1);
   }
-  final completas = [
-    for (final h in hijas)
-      (h.nota == null && notaPendientes != null) ? h.conNota(notaPendientes) : h,
-  ];
+  // Fijada entera: reemplaza el cálculo de sus hijas.
+  final entera = usarSupuestas ? _supuestaEntera(e, hijas) : null;
+  if (entera != null) return Fraccion(entera, 1);
+
+  final completas = <Evaluacion>[];
+  for (final h in hijas) {
+    final n = _notaHoja(h, notaPendientes, usarSupuestas);
+    completas.add(h.nota == null && n != null ? h.conNota(n) : h);
+  }
   return notaCompuesta(completas, escala);
 }
 
@@ -117,6 +134,7 @@ Fraccion? _sumaPonderada(
   ConfiguracionEscala escala, {
   int? notaPendientes,
   required bool exigirCompleto,
+  bool usarSupuestas = false,
 }) {
   final raiz = primerNivel(todas);
   if (raiz.isEmpty) return null;
@@ -125,7 +143,8 @@ Fraccion? _sumaPonderada(
   }
   var total = const Fraccion(0, 1);
   for (final e in raiz) {
-    final valor = _valorEvaluacion(e, todas, escala, notaPendientes);
+    final valor =
+        _valorEvaluacion(e, todas, escala, notaPendientes, usarSupuestas);
     if (valor == null) return null;
     total = total + valor.por(e.porcentaje ?? 0);
   }
@@ -134,13 +153,18 @@ Fraccion? _sumaPonderada(
 
 /// Definitiva $D = R(\sum_i n_i p_i)$ en centésimas. null si los porcentajes
 /// no suman 100 % o hay evaluaciones sin nota (y no se da [notaPendientes]).
+/// Con [usarSupuestas], las notas supuestas cuentan como reales (solo para
+/// la proyección: el acumulado, el cierre y Hoy no lo pasan).
 int? definitiva(
   List<Evaluacion> todas,
   ConfiguracionEscala escala, {
   int? notaPendientes,
+  bool usarSupuestas = false,
 }) {
   final suma = _sumaPonderada(todas, escala,
-      notaPendientes: notaPendientes, exigirCompleto: true);
+      notaPendientes: notaPendientes,
+      exigirCompleto: true,
+      usarSupuestas: usarSupuestas);
   return suma == null ? null : redondearAEscala(suma, escala);
 }
 
@@ -152,14 +176,41 @@ int? acumuladoPresentado(List<Evaluacion> todas, ConfiguracionEscala escala) {
 }
 
 /// Evaluaciones sin nota que no son compuestas (las que faltan por presentar).
-int contarPendientes(List<Evaluacion> todas) {
-  var pendientes = 0;
+/// Con [usarSupuestas] tampoco cuenta las fijadas ni las hijas de una
+/// compuesta fijada entera: quedan solo las que la proyección busca.
+int contarPendientes(List<Evaluacion> todas, {bool usarSupuestas = false}) =>
+    pendientesBuscadas(todas, usarSupuestas: usarSupuestas).length;
+
+/// Las evaluaciones que cuenta [contarPendientes], en orden. Sirve para
+/// nombrarlas ("Necesitas 2.7 en Trabajo final").
+List<Evaluacion> pendientesBuscadas(
+  List<Evaluacion> todas, {
+  bool usarSupuestas = false,
+}) {
+  final pendientes = <Evaluacion>[];
   for (final e in todas) {
+    if (e.nota != null) continue;
     final id = e.id;
     final esCompuesta = id != null && todas.any((h) => h.padreId == id);
-    if (!esCompuesta && e.nota == null) pendientes++;
+    if (esCompuesta) continue;
+    if (usarSupuestas &&
+        (e.notaSupuesta != null || _padreFijado(e, todas))) {
+      continue;
+    }
+    pendientes.add(e);
   }
   return pendientes;
+}
+
+/// true si [e] es hija de una compuesta con nota supuesta entera. Como [e]
+/// no tiene nota, esa compuesta sigue pendiente y su suposición vale.
+bool _padreFijado(Evaluacion e, List<Evaluacion> todas) {
+  final padreId = e.padreId;
+  if (padreId == null) return false;
+  for (final p in todas) {
+    if (p.id == padreId) return p.notaSupuesta != null;
+  }
+  return false;
 }
 
 // ------------------------------------------------- Proyección (D-009)
@@ -170,6 +221,10 @@ enum TipoProyeccion {
 
   /// No queda nada pendiente: [Proyeccion.nota] es la definitiva.
   completa,
+
+  /// Todo lo pendiente tiene nota supuesta: [Proyeccion.nota] es la
+  /// definitiva que resultaría. No es real, por eso no es [completa].
+  simulada,
 
   /// Con la nota mínima en lo que falta ya se alcanza la meta.
   asegurada,
@@ -182,46 +237,64 @@ enum TipoProyeccion {
 }
 
 class Proyeccion {
-  const Proyeccion(this.tipo, {this.nota, this.definitivaMaxima});
+  const Proyeccion(
+    this.tipo, {
+    this.nota,
+    this.definitivaMaxima,
+    this.buscadas = 0,
+  });
 
   final TipoProyeccion tipo;
   final int? nota;
   final int? definitivaMaxima;
+
+  /// Cuántas evaluaciones pendientes entraron en la búsqueda (sin contar
+  /// las que tienen nota supuesta).
+  final int buscadas;
 }
 
-/// Prueba cada nota posible (mín, mín + paso, …, máx) en todas las
-/// pendientes y devuelve la menor con la que la definitiva llega a [meta].
-/// Es exacto aunque haya redondeos intermedios, porque usa la misma
-/// función [definitiva] en cada intento.
+/// Prueba cada nota posible (mín, mín + paso, …, máx) en las pendientes
+/// y devuelve la menor con la que la definitiva llega a [meta]. Es exacto
+/// aunque haya redondeos intermedios, porque usa la misma función
+/// [definitiva] en cada intento. Con [usarSupuestas], las fijadas quedan
+/// constantes y solo se busca en las demás (D-009 sigue igual).
 Proyeccion proyectar(
   List<Evaluacion> todas,
   ConfiguracionEscala escala, {
   required int meta,
+  bool usarSupuestas = false,
 }) {
   final raiz = primerNivel(todas);
   if (raiz.isEmpty || sumaPorcentajes(raiz) != porcentajeCompleto) {
     return const Proyeccion(TipoProyeccion.porcentajesIncompletos);
   }
-  if (contarPendientes(todas) == 0) {
-    return Proyeccion(TipoProyeccion.completa,
-        nota: definitiva(todas, escala));
+  final buscadas = contarPendientes(todas, usarSupuestas: usarSupuestas);
+  if (buscadas == 0) {
+    final real = contarPendientes(todas) == 0;
+    return Proyeccion(
+      real ? TipoProyeccion.completa : TipoProyeccion.simulada,
+      nota: definitiva(todas, escala, usarSupuestas: !real),
+    );
   }
   final paso = escala.centesimasPorUnidad;
   for (var x = escala.notaMinima; x <= escala.notaMaxima; x += paso) {
-    final d = definitiva(todas, escala, notaPendientes: x);
+    final d = definitiva(todas, escala,
+        notaPendientes: x, usarSupuestas: usarSupuestas);
     if (d != null && d >= meta) {
       return Proyeccion(
         x == escala.notaMinima
             ? TipoProyeccion.asegurada
             : TipoProyeccion.necesita,
         nota: x,
+        buscadas: buscadas,
       );
     }
   }
   return Proyeccion(
     TipoProyeccion.noAlcanza,
-    definitivaMaxima:
-        definitiva(todas, escala, notaPendientes: escala.notaMaxima),
+    definitivaMaxima: definitiva(todas, escala,
+        notaPendientes: escala.notaMaxima, usarSupuestas: usarSupuestas),
+    buscadas: buscadas,
   );
 }
 
