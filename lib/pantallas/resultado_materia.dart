@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../dominio/calculo_notas.dart';
-import '../dominio/configuracion_escala.dart';
+import '../dominio/estado_notas.dart';
 import '../dominio/evaluacion.dart';
 import '../dominio/materia.dart';
 import '../estado/providers.dart';
@@ -16,9 +16,17 @@ const _rojo = (Color(0xFF8C1D18), Color(0xFFFCE4E2));
 
 /// Definitiva, acumulado y proyección de una materia en curso.
 class ResultadoMateria extends ConsumerStatefulWidget {
-  const ResultadoMateria({super.key, required this.materia});
+  const ResultadoMateria({
+    super.key,
+    required this.materia,
+    this.conTitulo = true,
+  });
 
   final Materia materia;
+
+  /// false en las tarjetas de "Proyectar notas", que ya llevan el nombre
+  /// de la materia como encabezado.
+  final bool conTitulo;
 
   @override
   ConsumerState<ResultadoMateria> createState() => _ResultadoMateriaState();
@@ -26,20 +34,6 @@ class ResultadoMateria extends ConsumerStatefulWidget {
 
 class _ResultadoMateriaState extends ConsumerState<ResultadoMateria> {
   int? _meta;
-
-  Future<void> _cerrarCon(int nota, ConfiguracionEscala escala) async {
-    final db = ref.read(baseDatosProvider);
-    final aprueba = escala.aprueba(nota);
-    final ok = await confirmar(
-      context,
-      titulo: '¿Cerrar con ${escala.formatear(nota)}?',
-      mensaje: 'La materia queda ${aprueba ? 'aprobada' : 'reprobada'} con '
-          'esa definitiva. Si te equivocas, puedes reabrirla.',
-      accion: 'Cerrar materia',
-    );
-    if (!ok) return;
-    await db.guardarMateria(widget.materia.cerrar(nota, escala));
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -94,7 +88,8 @@ class _ResultadoMateriaState extends ConsumerState<ResultadoMateria> {
             ),
             const SizedBox(height: 12),
             FilledButton.icon(
-              onPressed: () => _cerrarCon(d, escala),
+              onPressed: () =>
+                  cerrarMateriaCon(context, ref, widget.materia, d, escala),
               icon: const Icon(Icons.lock_outline),
               label: Text('Cerrar materia con ${f(d)}'),
             ),
@@ -153,8 +148,10 @@ class _ResultadoMateriaState extends ConsumerState<ResultadoMateria> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text('Definitiva y proyección', style: tema.textTheme.titleMedium),
-        const SizedBox(height: 8),
+        if (widget.conTitulo) ...[
+          Text('Definitiva y proyección', style: tema.textTheme.titleMedium),
+          const SizedBox(height: 8),
+        ],
         if (acumulado != null && proyeccion.tipo != TipoProyeccion.completa)
           Padding(
             padding: const EdgeInsets.only(bottom: 8),
@@ -253,21 +250,23 @@ class AlertaMateria extends ConsumerWidget {
 
     final p = proyectar(todas, escala, meta: escala.notaAprobatoria);
     final f = escala.formatear;
-    final (IconData, (Color, Color), String)? alerta = switch (p.tipo) {
-      TipoProyeccion.necesita when p.nota! > escala.notaAprobatoria => (
+    // El mismo criterio del chip de Notas (estado_notas.dart).
+    final (IconData, (Color, Color), String)? alerta =
+        switch (estadoDeProyeccion(p, escala)) {
+      EstadoNotas.enRiesgo => (
           Icons.warning_amber_rounded,
           _ambar,
           '${materia.nombre}: necesitas ${f(p.nota!)} en lo que falta para aprobar.',
         ),
-      TipoProyeccion.noAlcanza => (
-          Icons.cancel_outlined,
-          _rojo,
-          '${materia.nombre}: ya no alcanza para aprobar.',
-        ),
-      TipoProyeccion.completa when !escala.aprueba(p.nota!) => (
+      EstadoNotas.noAlcanza when p.tipo == TipoProyeccion.completa => (
           Icons.cancel_outlined,
           _rojo,
           '${materia.nombre}: la definitiva es ${f(p.nota!)}.',
+        ),
+      EstadoNotas.noAlcanza => (
+          Icons.cancel_outlined,
+          _rojo,
+          '${materia.nombre}: ya no alcanza para aprobar.',
         ),
       _ => null,
     };

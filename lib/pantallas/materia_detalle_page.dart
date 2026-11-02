@@ -1,15 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../dominio/calculo_notas.dart';
 import '../dominio/configuracion_escala.dart';
+import '../dominio/estado_notas.dart';
 import '../dominio/formato_fecha.dart';
 import '../dominio/materia.dart';
 import '../dominio/redondeo.dart';
 import '../estado/providers.dart';
-import 'evaluaciones_seccion.dart';
 import 'horario_page.dart';
 import 'materia_form_page.dart';
-import 'resultado_materia.dart';
+import 'notas_page.dart';
 import 'widgets_materia.dart';
 
 /// Detalle de una materia con sus acciones según el estado.
@@ -182,11 +183,7 @@ class _Detalle extends ConsumerWidget {
             const SizedBox(height: 16),
             HorarioMateriaSeccion(materia: materia),
             const SizedBox(height: 16),
-            EvaluacionesSeccion(materia: materia),
-            if (materia.estado == EstadoMateria.enCurso) ...[
-              const SizedBox(height: 24),
-              ResultadoMateria(materia: materia),
-            ],
+            _NotasResumen(materia: materia),
             const SizedBox(height: 24),
             ..._acciones(context, ref, escala),
           ],
@@ -249,6 +246,84 @@ class _Detalle extends ConsumerWidget {
           ),
         ];
     }
+  }
+}
+
+/// Resumen de notas en solo lectura (D-024): las evaluaciones y la
+/// proyección se manejan en la pestaña Notas. Aquí queda el cierre.
+class _NotasResumen extends ConsumerWidget {
+  const _NotasResumen({required this.materia});
+
+  final Materia materia;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final tema = Theme.of(context);
+    final escala = escalaActual(ref);
+    String f(int? n) => n == null ? '—' : escala.formatear(n);
+    final todas = switch (ref.watch(evaluacionesProvider(materia.id!))) {
+      AsyncData(:final value) => value,
+      _ => null,
+    };
+    final estado = todas == null ? null : estadoNotas(materia, todas, escala);
+    final enCurso = materia.estado == EstadoMateria.enCurso;
+    final def = enCurso
+        ? (todas == null ? null : definitiva(todas, escala))
+        : materia.notaFinal;
+
+    final String resumen;
+    switch (materia.estado) {
+      case EstadoMateria.enCurso:
+        final acumulado =
+            todas == null ? null : acumuladoPresentado(todas, escala);
+        resumen = 'Llevas ${f(acumulado)} · Definitiva ${f(def)}';
+      case EstadoMateria.aprobada || EstadoMateria.reprobada:
+        resumen = 'Definitiva ${f(def)}';
+      case EstadoMateria.cancelada:
+        resumen = 'Fuera del promedio';
+    }
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 12, 8, 4),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: Text('Notas', style: tema.textTheme.titleMedium),
+                ),
+                if (estado != null) EstadoNotasChip(estado),
+                const SizedBox(width: 8),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Text(resumen, style: tema.textTheme.bodyLarge),
+            if (enCurso && def != null) ...[
+              const SizedBox(height: 12),
+              Padding(
+                padding: const EdgeInsets.only(right: 8),
+                child: FilledButton.icon(
+                  onPressed: () =>
+                      cerrarMateriaCon(context, ref, materia, def, escala),
+                  icon: const Icon(Icons.lock_outline),
+                  label: Text('Cerrar materia con ${f(def)}'),
+                ),
+              ),
+            ],
+            Align(
+              alignment: Alignment.centerLeft,
+              child: TextButton.icon(
+                onPressed: () => abrirNotasDe(context, ref, materia),
+                icon: const Icon(Icons.grading),
+                label: const Text('Ver notas'),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
 

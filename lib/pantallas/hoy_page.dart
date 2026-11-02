@@ -11,6 +11,7 @@ import '../estado/providers.dart';
 import 'configuracion_page.dart';
 import 'horario_page.dart';
 import 'materia_detalle_page.dart';
+import 'proyectar_notas_page.dart';
 import 'resultado_materia.dart';
 import 'widgets_materia.dart';
 
@@ -202,7 +203,11 @@ class _Alertas extends ConsumerWidget {
               materia: m,
               onTap: () => Navigator.of(context).push(
                 MaterialPageRoute<void>(
-                  builder: (_) => MateriaDetallePage(materiaId: m.id!),
+                  builder: (_) => ProyectarNotasPage(
+                    semestreId: semestreId,
+                    preelegidas: {m.id!},
+                    directo: true,
+                  ),
                 ),
               ),
             ),

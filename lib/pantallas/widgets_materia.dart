@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../dominio/configuracion_escala.dart';
+import '../dominio/estado_notas.dart';
 import '../dominio/materia.dart';
 import '../estado/providers.dart';
 import 'resultado_materia.dart';
@@ -32,6 +33,28 @@ ConfiguracionEscala escalaActual(WidgetRef ref) {
     AsyncData(:final value) => value.escala,
     _ => ConfiguracionEscala.itm,
   };
+}
+
+/// Confirma y cierra [materia] con [nota]: aprobada o reprobada según la
+/// escala. La usan el detalle de la materia y el atajo de Notas (D-024).
+Future<void> cerrarMateriaCon(
+  BuildContext context,
+  WidgetRef ref,
+  Materia materia,
+  int nota,
+  ConfiguracionEscala escala,
+) async {
+  final db = ref.read(baseDatosProvider);
+  final aprueba = escala.aprueba(nota);
+  final ok = await confirmar(
+    context,
+    titulo: '¿Cerrar con ${escala.formatear(nota)}?',
+    mensaje: 'La materia queda ${aprueba ? 'aprobada' : 'reprobada'} con '
+        'esa definitiva. Si te equivocas, puedes reabrirla.',
+    accion: 'Cerrar materia',
+  );
+  if (!ok) return;
+  await db.guardarMateria(materia.cerrar(nota, escala));
 }
 
 /// Diálogo de sí/no. Devuelve true solo si se toca [accion].
@@ -111,6 +134,62 @@ class EstadoChip extends StatelessWidget {
           cs.surfaceContainerHighest,
         ),
     };
+    return _Pastilla(
+        icono: icono, texto: estado.etiqueta, color: texto, fondo: fondo);
+  }
+}
+
+/// Estado de notas de una materia (D-024), con ícono y texto (D-012).
+class EstadoNotasChip extends StatelessWidget {
+  const EstadoNotasChip(this.estado, {super.key});
+
+  final EstadoNotas estado;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    const verde = (Color(0xFF17663A), Color(0xFFDDF3E4));
+    const ambar = (Color(0xFF8A5A00), Color(0xFFFFF0CC));
+    const rojo = (Color(0xFF8C1D18), Color(0xFFFCE4E2));
+    final (icono, (texto, fondo)) = switch (estado) {
+      EstadoNotas.aprobando ||
+      EstadoNotas.completa ||
+      EstadoNotas.aprobada =>
+        (Icons.check_circle_outline, verde),
+      EstadoNotas.enRiesgo => (Icons.warning_amber_rounded, ambar),
+      EstadoNotas.noAlcanza ||
+      EstadoNotas.reprobada =>
+        (Icons.cancel_outlined, rojo),
+      EstadoNotas.sinPorcentajes => (
+          Icons.pie_chart_outline,
+          (cs.onSurfaceVariant, cs.surfaceContainerHighest),
+        ),
+      EstadoNotas.cancelada => (
+          Icons.block,
+          (cs.onSurfaceVariant, cs.surfaceContainerHighest),
+        ),
+    };
+    return _Pastilla(
+        icono: icono, texto: estado.etiqueta, color: texto, fondo: fondo);
+  }
+}
+
+/// La forma común de los chips de estado: ícono + texto sobre un fondo.
+class _Pastilla extends StatelessWidget {
+  const _Pastilla({
+    required this.icono,
+    required this.texto,
+    required this.color,
+    required this.fondo,
+  });
+
+  final IconData icono;
+  final String texto;
+  final Color color;
+  final Color fondo;
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
@@ -120,14 +199,14 @@ class EstadoChip extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icono, size: 16, color: texto),
+          Icon(icono, size: 16, color: color),
           const SizedBox(width: 4),
           Text(
-            estado.etiqueta,
+            texto,
             style: Theme.of(context)
                 .textTheme
                 .labelMedium
-                ?.copyWith(color: texto),
+                ?.copyWith(color: color),
           ),
         ],
       ),
